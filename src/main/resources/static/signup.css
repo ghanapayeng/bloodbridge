@@ -1,0 +1,425 @@
+/* =========================
+   BLOODBRIDGE SIGNUP
+   ========================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f8f7f5;
+    color: #292525;
+    min-height: 100vh;
+}
+
+/* =========================
+   MAIN LAYOUT
+   ========================= */
+
+.signup-page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+/* =========================
+   LEFT SIDE
+   ========================= */
+
+.signup-intro {
+    background: #c62828;
+    color: white;
+    padding: 45px 9%;
+    display: flex;
+    flex-direction: column;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    text-decoration: none;
+    font-size: 21px;
+    font-weight: 700;
+}
+
+.logo-icon {
+    width: 38px;
+    height: 38px;
+    background: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo > span:last-child span {
+    color: #ffd7d4;
+}
+
+.intro-content {
+    max-width: 500px;
+    margin: auto 0;
+}
+
+.small-heading {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.7px;
+    margin-bottom: 13px;
+    opacity: 0.85;
+}
+
+.intro-content h1 {
+    font-size: 40px;
+    line-height: 1.12;
+    letter-spacing: -1.1px;
+    margin-bottom: 17px;
+}
+
+.intro-content > p:not(.small-heading) {
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 450px;
+    opacity: 0.9;
+}
+
+/* =========================
+   BENEFITS
+   ========================= */
+
+.benefits {
+    margin-top: 35px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.benefit {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+}
+
+.benefit > span {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.benefit strong {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 3px;
+}
+
+.benefit small {
+    display: block;
+    font-size: 11px;
+    opacity: 0.75;
+}
+
+/* =========================
+   RIGHT SIDE
+   ========================= */
+
+.signup-card-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 35px 40px;
+}
+
+.signup-card {
+    width: 100%;
+    max-width: 455px;
+    background: white;
+    border: 1px solid #eee7e4;
+    border-radius: 18px;
+    padding: 32px;
+    box-shadow: 0 8px 35px rgba(50, 30, 30, 0.04);
+}
+
+.card-heading {
+    margin-bottom: 24px;
+}
+
+.card-heading h2 {
+    font-size: 26px;
+    margin-bottom: 6px;
+}
+
+.card-heading p {
+    color: #888;
+    font-size: 13px;
+}
+
+/* =========================
+   FORM
+   ========================= */
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group > label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="password"] {
+    width: 100%;
+    height: 45px;
+    border: 1px solid #ded8d5;
+    border-radius: 9px;
+    padding: 0 13px;
+    font-family: inherit;
+    font-size: 13px;
+    color: #333;
+    outline: none;
+    transition: 0.2s ease;
+}
+
+.form-group input:focus {
+    border-color: #c62828;
+    box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.08);
+}
+
+.form-group input::placeholder {
+    color: #aaa;
+}
+
+.password-hint {
+    display: block;
+    color: #999;
+    font-size: 10px;
+    margin-top: 6px;
+}
+
+/* =========================
+   ROLE OPTIONS
+   ========================= */
+
+.role-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.role-option {
+    position: relative;
+    border: 1px solid #ded8d5;
+    border-radius: 10px;
+    padding: 13px;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.role-option:hover {
+    border-color: #d08b86;
+    background: #fffafa;
+}
+
+.role-option input {
+    position: absolute;
+    opacity: 0;
+}
+
+.role-content {
+    display: block;
+}
+
+.role-content strong {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.role-content small {
+    display: block;
+    color: #999;
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.role-option:has(input:checked) {
+    border-color: #c62828;
+    background: #fff3f2;
+    box-shadow: 0 0 0 1px #c62828;
+}
+
+.role-option:has(input:checked) strong {
+    color: #c62828;
+}
+
+/* =========================
+   TERMS
+   ========================= */
+
+.terms {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    color: #777;
+    font-size: 10px;
+    line-height: 1.5;
+    cursor: pointer;
+    margin: 3px 0 20px;
+}
+
+.terms input {
+    margin-top: 2px;
+    accent-color: #c62828;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+/* =========================
+   SIGNUP BUTTON
+   ========================= */
+
+.signup-btn {
+    width: 100%;
+    height: 46px;
+    border: none;
+    border-radius: 9px;
+    background: #c62828;
+    color: white;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.signup-btn:hover {
+    background: #a91f1f;
+}
+
+/* =========================
+   LOGIN
+   ========================= */
+
+.login-text {
+    text-align: center;
+    color: #888;
+    font-size: 12px;
+    margin-top: 21px;
+}
+
+.login-text a {
+    color: #c62828;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.login-text a:hover {
+    text-decoration: underline;
+}
+
+/* =========================
+   HOME
+   ========================= */
+
+.home-link {
+    display: block;
+    text-align: center;
+    margin-top: 21px;
+    color: #999;
+    text-decoration: none;
+    font-size: 11px;
+}
+
+.home-link:hover {
+    color: #c62828;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 850px) {
+
+    .signup-page {
+        grid-template-columns: 1fr;
+    }
+
+    .signup-intro {
+        min-height: 330px;
+        padding: 30px 8%;
+    }
+
+    .intro-content {
+        margin: auto 0;
+    }
+
+    .intro-content h1 {
+        font-size: 32px;
+    }
+
+    .benefits {
+        margin-top: 22px;
+        gap: 12px;
+    }
+
+    .signup-card-section {
+        padding: 35px 20px;
+    }
+}
+
+@media (max-width: 500px) {
+
+    .signup-intro {
+        min-height: 285px;
+        padding: 25px 20px;
+    }
+
+    .logo {
+        font-size: 18px;
+    }
+
+    .logo-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .intro-content h1 {
+        font-size: 27px;
+    }
+
+    .intro-content > p:not(.small-heading) {
+        font-size: 13px;
+    }
+
+    .benefits {
+        display: none;
+    }
+
+    .signup-card {
+        padding: 25px 20px;
+    }
+
+    .signup-card-section {
+        padding: 25px 15px;
+    }
+
+    .role-options {
+        grid-template-columns: 1fr;
+    }
+}

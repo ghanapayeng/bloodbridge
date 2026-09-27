@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>History | BloodBridge</title>
+
+    <link rel="stylesheet" href="history.css">
+    <style>
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.25s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background: #ffffff;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 480px;
+            padding: 28px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transform: translateY(20px);
+            transition: all 0.25s ease;
+        }
+        .modal-overlay.active .modal-card {
+            transform: translateY(0);
+        }
+        .modal-form-group {
+            margin-bottom: 16px;
+        }
+        .modal-form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+        .modal-form-group input, .modal-form-group select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+
+        <a href="dashboard.html" class="logo">
+            <span class="logo-icon">♥</span>
+            <span>Blood<span>Bridge</span></span>
+        </a>
+
+        <a href="dashboard.html" class="back-link">
+            ← Back to Dashboard
+        </a>
+
+    </header>
+
+
+    <!-- MAIN -->
+    <main class="page-container">
+
+        <!-- INTRO -->
+        <section class="page-intro">
+
+            <div>
+                <p class="small-heading">YOUR ACTIVITY</p>
+
+                <h1>Your donation history.</h1>
+
+                <p>
+                    Keep track of the lives you've helped and the
+                    blood requests you've been part of.
+                </p>
+            </div>
+
+            <div class="impact-badge" id="historyImpactBadge">
+                ♥ 0 lives impacted
+            </div>
+
+        </section>
+
+
+        <!-- SUMMARY -->
+        <section class="summary-grid">
+
+            <div class="summary-card">
+
+                <div class="summary-icon">
+                    ♥
+                </div>
+
+                <div>
+                    <strong id="statDonationsCount">0</strong>
+                    <span>Donations completed</span>
+                </div>
+
+            </div>
+
+
+            <div class="summary-card">
+
+                <div class="summary-icon">
+                    ✓
+                </div>
+
+                <div>
+                    <strong id="statRequestsHelped">0</strong>
+                    <span>Requests helped</span>
+                </div>
+
+            </div>
+
+
+            <div class="summary-card">
+
+                <div class="summary-icon">
+                    +
+                </div>
+
+                <div>
+                    <strong id="statBloodVolume">0.0 L</strong>
+                    <span>Blood donated</span>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- DONATION HISTORY -->
+        <section class="history-card">
+
+            <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+
+                <div>
+                    <p class="small-heading">DONATION HISTORY</p>
+                    <h2>Your contributions</h2>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="count-label" id="donationCountLabel">
+                        0 records
+                    </span>
+                    <button id="openRecordDonationModal" style="cursor: pointer; padding: 8px 16px; background: #dc2626; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 13px;">
+                        + Record Donation
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- DYNAMIC DONATION RECORDS -->
+            <div id="donationHistoryList">
+                <div style="padding: 24px; text-align: center; color: #64748b;">Loading donation records...</div>
+            </div>
+
+        </section>
+
+
+        <!-- REQUEST HISTORY -->
+        <section class="history-card">
+
+            <div class="section-header">
+
+                <div>
+                    <p class="small-heading">REQUEST ACTIVITY</p>
+                    <h2>Blood requests</h2>
+                </div>
+
+                <span class="count-label" id="requestCountLabel">
+                    0 requests
+                </span>
+
+            </div>
+
+            <!-- DYNAMIC REQUEST RECORDS -->
+            <div id="requestHistoryList">
+                <div style="padding: 24px; text-align: center; color: #64748b;">Loading requests activity...</div>
+            </div>
+
+        </section>
+
+
+        <!-- IMPACT MESSAGE -->
+        <section class="impact-card">
+
+            <div class="impact-icon">
+                ♥
+            </div>
+
+            <div>
+
+                <h2>Every donation counts.</h2>
+
+                <p>
+                    Your willingness to donate can give someone another
+                    chance. Thank you for being part of the BloodBridge
+                    community.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- RECORD DONATION MODAL -->
+    <div class="modal-overlay" id="recordDonationModal">
+        <div class="modal-card">
+            <h3 style="margin: 0 0 8px 0; font-size: 18px; color: #1e293b;">Record a Blood Donation</h3>
+            <p style="margin: 0 0 20px 0; font-size: 13px; color: #64748b;">Keep your donation journey and impact accurate.</p>
+
+            <form id="recordDonationForm">
+                <div class="modal-form-group">
+                    <label for="donationDate">Date of Donation</label>
+                    <input type="date" id="donationDate" required>
+                </div>
+
+                <div class="modal-form-group">
+                    <label for="donationUnits">Units of Blood (0.1 - 2.0)</label>
+                    <input type="number" id="donationUnits" step="0.1" min="0.1" max="2.0" value="1.0" required>
+                    <small style="color: #64748b; font-size: 11px;">Standard whole-blood donation is 1.0 unit (~450 ml)</small>
+                </div>
+
+                <div class="modal-form-group">
+                    <label for="donationRequest">Linked Blood Request <small style="color: #64748b;">(Optional)</small></label>
+                    <select id="donationRequest">
+                        <option value="">Walk-in / Direct hospital donation</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+                    <button type="button" id="closeModalBtn" style="cursor: pointer; padding: 9px 18px; background: #f1f5f9; color: #475569; border: none; border-radius: 8px; font-weight: 500; font-size: 13px;">Cancel</button>
+                    <button type="submit" style="cursor: pointer; padding: 9px 18px; background: #dc2626; color: #ffffff; border: none; border-radius: 8px; font-weight: 600; font-size: 13px;">Save Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+    <script src="history.js"></script>
+
+</body>
+</html>

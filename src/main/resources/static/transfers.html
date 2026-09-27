@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Blood Transfers | BloodBridge</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .transfer-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            transition: all 0.2s;
+        }
+        .transfer-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-color: #cbd5e1;
+        }
+        .route-display {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .route-arrow {
+            color: #94a3b8;
+            font-size: 18px;
+        }
+        .badge-tf-status {
+            padding: 4px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .tf-requested { background: #fef3c7; color: #b45309; }
+        .tf-approved { background: #eff6ff; color: #2563eb; }
+        .tf-dispatched { background: #f3e8ff; color: #7e22ce; }
+        .tf-delivered, .tf-received { background: #dcfce7; color: #15803d; }
+        .tf-rejected { background: #fee2e2; color: #b91c1c; }
+        .action-btn-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn-tf {
+            cursor: pointer;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .btn-tf-approve { background: #2563eb; color: white; }
+        .btn-tf-approve:hover { background: #1d4ed8; }
+        .btn-tf-dispatch { background: #7e22ce; color: white; }
+        .btn-tf-dispatch:hover { background: #6b21a8; }
+        .btn-tf-deliver { background: #059669; color: white; }
+        .btn-tf-deliver:hover { background: #047857; }
+        .btn-tf-reject { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+        .btn-tf-reject:hover { background: #ffe4e6; }
+    </style>
+</head>
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="heart">♥</span>
+            <span>Blood<span>Bridge</span></span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <p class="nav-title">MAIN</p>
+            <a href="dashboard.html" class="nav-link"><span>⌂</span> Dashboard</a>
+            <a href="find-donors.html" class="nav-link"><span>⌕</span> Find Donors</a>
+            <a href="request.html" class="nav-link"><span>＋</span> Request Blood</a>
+
+            <p class="nav-title">MY ACTIVITY</p>
+            <a href="donor.html" class="nav-link"><span>♥</span> My Donor Profile</a>
+            <a href="history.html" class="nav-link"><span>◷</span> History</a>
+
+            <p class="nav-title">HOSPITAL & INVENTORY</p>
+            <a href="inventory.html" class="nav-link"><span>📦</span> Blood Inventory</a>
+            <a href="transfers.html" class="nav-link active"><span>⇄</span> Transfers</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="dashboard.html" class="nav-link"><span>←</span> Back to Dashboard</a>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <header class="topbar">
+            <div style="font-size: 18px; font-weight: 700; color: #1e293b;">
+                ⇄ Inter-Hospital Blood Transfer Network
+            </div>
+            <div class="topbar-right">
+                <button type="button" onclick="openRequestTransferModal()" style="cursor: pointer; background: #dc2626; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 13px;">
+                    + Request Transfer
+                </button>
+            </div>
+        </header>
+
+        <section class="dashboard">
+
+            <!-- SUMMARY STATS -->
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="card-heading">
+                        <span>PENDING REQUESTS</span>
+                        <span class="card-icon">⏳</span>
+                    </div>
+                    <div class="big-number" id="tfPendingCount">0</div>
+                    <p>Awaiting hospital approval</p>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-heading">
+                        <span>IN TRANSIT</span>
+                        <span class="card-icon">🚚</span>
+                    </div>
+                    <div class="big-number" id="tfInTransitCount" style="color: #7e22ce;">0</div>
+                    <p>Dispatched & cold-chain tracked</p>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-heading">
+                        <span>COMPLETED TRANSFERS</span>
+                        <span class="card-icon">✓</span>
+                    </div>
+                    <div class="big-number" id="tfDeliveredCount" style="color: #059669;">0</div>
+                    <p>Safely received & deposited</p>
+                </div>
+            </div>
+
+            <!-- TRANSFERS LIST -->
+            <div style="margin-top: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h2 style="margin: 0; font-size: 18px; color: #1e293b;">Active Transfers</h2>
+                        <small style="color: #64748b;">Coordinated inter-facility blood inventory transfers</small>
+                    </div>
+
+                    <select id="tfStatusFilter" onchange="loadTransfers()" style="padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px;">
+                        <option value="">All Statuses</option>
+                        <option value="REQUESTED">Requested</option>
+                        <option value="APPROVED">Approved</option>
+                        <option value="DISPATCHED">In Transit / Dispatched</option>
+                        <option value="DELIVERED">Delivered</option>
+                        <option value="REJECTED">Rejected</option>
+                    </select>
+                </div>
+
+                <div id="transfersContainer">
+                    <div style="text-align: center; color: #94a3b8; padding: 40px;">Loading transfer requests...</div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+</div>
+
+<!-- REQUEST TRANSFER MODAL -->
+<div class="modal-overlay" id="transferModal" style="display: none;">
+    <div style="background: white; border-radius: 16px; padding: 28px; width: 480px; max-width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 18px; color: #1e293b;">+ Request Inter-Hospital Transfer</h3>
+            <button onclick="closeRequestTransferModal()" style="border: none; background: transparent; font-size: 18px; cursor: pointer;">✕</button>
+        </div>
+
+        <form id="transferForm" onsubmit="submitTransferRequest(event)">
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Destination Hospital (Your Facility)</label>
+                <input type="text" id="destHospitalInput" placeholder="e.g. City General Hospital" required style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Source Hospital / Blood Bank</label>
+                <input type="text" id="sourceHospitalInput" placeholder="e.g. Central Regional Red Cross Center" required style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Blood Group</label>
+                    <select id="tfBloodGroup" required style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+">B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+" selected>O+</option>
+                        <option value="O-">O-</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Units Needed</label>
+                    <input type="number" id="tfUnits" min="1" value="2" required style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Reason / Clinical Notes</label>
+                <textarea id="tfNotes" rows="3" placeholder="e.g. Critical trauma unit demand, local stock exhausted." style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="closeRequestTransferModal()" style="padding: 10px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; cursor: pointer; font-weight: 600;">Cancel</button>
+                <button type="submit" style="padding: 10px 20px; border-radius: 8px; border: none; background: #dc2626; color: white; cursor: pointer; font-weight: 700;">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="api.js"></script>
+<script src="transfers.js"></script>
+</body>
+</html>

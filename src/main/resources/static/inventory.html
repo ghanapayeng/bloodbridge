@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Inventory & Expiry | BloodBridge</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .inventory-table-card {
+            background: #ffffff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 24px;
+            margin-top: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .inv-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            margin-top: 16px;
+        }
+        .inv-table th {
+            text-align: left;
+            padding: 12px 16px;
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .inv-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #1e293b;
+        }
+        .badge-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .status-available { background: #dcfce7; color: #15803d; }
+        .status-reserved { background: #fef3c7; color: #b45309; }
+        .status-issued { background: #f1f5f9; color: #475569; }
+        .status-expired { background: #fee2e2; color: #b91c1c; }
+        .btn-action-sm {
+            cursor: pointer;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .btn-reserve { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
+        .btn-reserve:hover { background: #dbeafe; }
+        .btn-issue { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
+        .btn-issue:hover { background: #d1fae5; }
+        .expiring-alert-row { background: #fff5f5; }
+    </style>
+</head>
+<body>
+
+<div class="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="logo">
+            <span class="heart">♥</span>
+            <span>Blood<span>Bridge</span></span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <p class="nav-title">MAIN</p>
+            <a href="dashboard.html" class="nav-link"><span>⌂</span> Dashboard</a>
+            <a href="find-donors.html" class="nav-link"><span>⌕</span> Find Donors</a>
+            <a href="request.html" class="nav-link"><span>＋</span> Request Blood</a>
+
+            <p class="nav-title">MY ACTIVITY</p>
+            <a href="donor.html" class="nav-link"><span>♥</span> My Donor Profile</a>
+            <a href="history.html" class="nav-link"><span>◷</span> History</a>
+
+            <p class="nav-title">HOSPITAL & INVENTORY</p>
+            <a href="inventory.html" class="nav-link active"><span>📦</span> Blood Inventory</a>
+            <a href="transfers.html" class="nav-link"><span>⇄</span> Transfers</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <a href="dashboard.html" class="nav-link"><span>←</span> Back to Dashboard</a>
+        </div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <header class="topbar">
+            <div style="font-size: 18px; font-weight: 700; color: #1e293b;">
+                📦 Blood Inventory & Expiry Management
+            </div>
+            <div class="topbar-right" style="display: flex; gap: 10px; align-items: center;">
+                <a href="/api/export/inventory/csv" download style="text-decoration: none; padding: 8px 14px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; font-size: 13px; color: #334155; display: inline-flex; align-items: center; gap: 4px;">
+                    📥 Export CSV
+                </a>
+                <button type="button" onclick="openAddBatchModal()" style="cursor: pointer; background: #dc2626; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 13px;">
+                    + Add Inventory Batch
+                </button>
+            </div>
+        </header>
+
+        <section class="dashboard">
+
+            <!-- SUMMARY CARDS -->
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="card-heading">
+                        <span>AVAILABLE UNITS</span>
+                        <span class="card-icon">🩸</span>
+                    </div>
+                    <div class="big-number" id="totalAvailableCount">0</div>
+                    <p>Ready for transfusion</p>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-heading">
+                        <span>RESERVED UNITS</span>
+                        <span class="card-icon">🔒</span>
+                    </div>
+                    <div class="big-number" id="totalReservedCount">0</div>
+                    <p>Locked for open requests</p>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-heading">
+                        <span>EXPIRING SOON</span>
+                        <span class="card-icon">⏳</span>
+                    </div>
+                    <div class="big-number" id="expiringSoonCount" style="color: #dc2626;">0</div>
+                    <p>Expiring within 7 days</p>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-heading">
+                        <span>LOW STOCK ALERTS</span>
+                        <span class="card-icon">⚠️</span>
+                    </div>
+                    <div class="big-number" id="lowStockCount" style="color: #d97706;">0</div>
+                    <p>Blood types under 5 units</p>
+                </div>
+            </div>
+
+            <!-- STOCK BREAKDOWN BY BLOOD TYPE -->
+            <div style="background: white; border-radius: 14px; border: 1px solid #e2e8f0; padding: 20px; margin-top: 24px;">
+                <h3 style="margin: 0 0 14px 0; font-size: 15px; color: #1e293b;">Blood Group Stock Overview</h3>
+                <div id="stockGroupsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px;">
+                    <div style="padding: 10px; text-align: center; color: #94a3b8;">Loading stock...</div>
+                </div>
+            </div>
+
+            <!-- INVENTORY BATCHES TABLE -->
+            <div class="inventory-table-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h2 style="margin: 0; font-size: 18px; color: #1e293b;">Inventory Batches</h2>
+                        <small style="color: #64748b;">Real-time hospital and blood bank reserves</small>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <select id="filterBloodGroup" onchange="loadInventoryData()" style="padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px;">
+                            <option value="">All Blood Groups</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+
+                        <select id="filterStatus" onchange="loadInventoryData()" style="padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px;">
+                            <option value="">All Statuses</option>
+                            <option value="AVAILABLE" selected>Available</option>
+                            <option value="RESERVED">Reserved</option>
+                            <option value="ISSUED">Issued / Transfused</option>
+                            <option value="EXPIRED">Expired</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="inv-table">
+                        <thead>
+                            <tr>
+                                <th>Batch ID</th>
+                                <th>Blood Group</th>
+                                <th>Quantity</th>
+                                <th>Facility</th>
+                                <th>Collection Date</th>
+                                <th>Expiry Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventoryTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; color: #94a3b8; padding: 30px;">Loading inventory batches...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+    </main>
+</div>
+
+<!-- ADD BATCH MODAL -->
+<div class="modal-overlay" id="addBatchModal" style="display: none;">
+    <div style="background: white; border-radius: 16px; padding: 28px; width: 480px; max-width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0; font-size: 18px; color: #1e293b;">+ Add Blood Inventory Batch</h3>
+            <button onclick="closeAddBatchModal()" style="border: none; background: transparent; font-size: 18px; cursor: pointer;">✕</button>
+        </div>
+
+        <form id="addBatchForm" onsubmit="submitNewBatch(event)">
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Blood Group</label>
+                <select id="newBatchBg" required style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+" selected>B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Units (Quantity)</label>
+                <input type="number" id="newBatchQty" min="1" value="5" required style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            </div>
+
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Facility / Blood Bank Name</label>
+                <input type="text" id="newBatchFacility" placeholder="e.g. City General Hospital Blood Center" required style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Collection Date</label>
+                    <input type="date" id="newBatchCollectionDate" required style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Expiry Date</label>
+                    <input type="date" id="newBatchExpiryDate" required style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="closeAddBatchModal()" style="padding: 10px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; cursor: pointer; font-weight: 600;">Cancel</button>
+                <button type="submit" style="padding: 10px 20px; border-radius: 8px; border: none; background: #dc2626; color: white; cursor: pointer; font-weight: 700;">Save Batch</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="api.js"></script>
+<script src="inventory.js"></script>
+</body>
+</html>
