@@ -2,10 +2,19 @@
 
 [![Java](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.1-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![Render](https://img.shields.io/badge/Render-Live%20Demo-46E3B7.svg?logo=render&logoColor=white)](https://bloodbridge-wzdp.onrender.com)
+[![Database](https://img.shields.io/badge/Database-TiDB%20Cloud-E30C34.svg)](https://tidbcloud.com)
 [![Build Status](https://img.shields.io/badge/Build-Passing-success.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)]()
 
 **BloodBridge** is an enterprise-grade, full-stack emergency blood donation, hospital inventory tracking, and inter-facility coordination platform. It bridges the critical time gap between voluntary blood donors, patients in urgent need, and healthcare networks through real-time matching, intelligent demand forecasting, fraud prevention, and seamless communication.
+
+> 🌐 **Live Production Deployment**:  
+> - **Live App**: [https://bloodbridge-wzdp.onrender.com](https://bloodbridge-wzdp.onrender.com) (Hosted on **Render**)  
+> - **Production Database**: **TiDB Cloud** (Distributed Cloud MySQL Engine)
+
+> 💡 **AI Assistants & Developer Changelog**:  
+> For a complete, structured record of all architectural decisions, code changes, database entities, APIs, frontend pages, and testing specifications created till date, visit the **[changes/](file:///home/ghanapayeng/Desktop/bloodbridge/changes/README.md)** knowledge base directory.
 
 ---
 

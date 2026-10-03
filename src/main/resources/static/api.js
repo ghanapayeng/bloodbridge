@@ -1,8 +1,3 @@
-// ============================================
-// BLOODBRIDGE API & SHARED UTILITIES
-// ============================================
-
-// Display clear guidance if frontend is opened through Live Server instead of Spring Boot
 if (typeof window !== "undefined") {
     window.addEventListener("DOMContentLoaded", () => {
         if (window.location.port === "5500" || window.location.port === "5501" || window.location.protocol === "file:") {
@@ -20,9 +15,6 @@ if (typeof window !== "undefined") {
 
 let _cachedCsrf = null;
 
-/**
- * Fetch CSRF token from backend
- */
 async function getCsrfToken() {
     try {
         const response = await fetch("/api/auth/csrf", {
@@ -38,14 +30,10 @@ async function getCsrfToken() {
     return _cachedCsrf;
 }
 
-/**
- * Make an authenticated API request with CSRF and error handling
- */
 async function apiFetch(url, options = {}) {
     const method = (options.method || "GET").toUpperCase();
     const headers = Object.assign({}, options.headers || {});
 
-    // For state-changing requests, ensure CSRF token is present
     if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
         if (!_cachedCsrf) {
             await getCsrfToken();
@@ -55,7 +43,6 @@ async function apiFetch(url, options = {}) {
         }
     }
 
-    // Set JSON content type if body is provided and not FormData
     if (options.body && typeof options.body === "object" && !(options.body instanceof FormData)) {
         headers["Content-Type"] = "application/json";
         options.body = JSON.stringify(options.body);
@@ -96,9 +83,6 @@ async function apiFetch(url, options = {}) {
     return data;
 }
 
-/**
- * Get current authenticated user
- */
 async function getCurrentUser(redirectIfUnauth = false) {
     try {
         const user = await apiFetch("/api/auth/me", { redirectOnUnauthorized: redirectIfUnauth });
@@ -111,9 +95,6 @@ async function getCurrentUser(redirectIfUnauth = false) {
     }
 }
 
-/**
- * Log out user
- */
 async function logout() {
     try {
         await apiFetch("/api/auth/logout", { method: "POST", redirectOnUnauthorized: false });
@@ -125,9 +106,6 @@ async function logout() {
     }
 }
 
-/**
- * Format blood group from enum (e.g., A_POSITIVE) to display (A+)
- */
 function formatBloodGroup(bg) {
     if (!bg) return "—";
     const map = {
@@ -143,9 +121,6 @@ function formatBloodGroup(bg) {
     return map[bg] || bg;
 }
 
-/**
- * Convert display format (A+) to enum format (A_POSITIVE)
- */
 function toBloodGroupEnum(display) {
     if (!display) return null;
     const map = {
@@ -161,9 +136,6 @@ function toBloodGroupEnum(display) {
     return map[display] || display;
 }
 
-/**
- * Format Date into user-friendly string (e.g. 18 Aug 2026)
- */
 function formatDate(dateInput) {
     if (!dateInput) return "—";
     try {
@@ -179,9 +151,6 @@ function formatDate(dateInput) {
     }
 }
 
-/**
- * Format Time Ago (e.g. "2 hours ago")
- */
 function formatTimeAgo(dateInput) {
     if (!dateInput) return "";
     try {
@@ -202,9 +171,6 @@ function formatTimeAgo(dateInput) {
     }
 }
 
-/**
- * Display toast notification
- */
 function showToast(message, type = "success") {
     let container = document.getElementById("toast-container");
     if (!container) {
@@ -261,13 +227,11 @@ function showToast(message, type = "success") {
     toast.innerHTML = `<span style="font-weight:700;font-size:16px;">${icon}</span> <span>${message}</span>`;
     container.appendChild(toast);
 
-    // Animate in
     requestAnimationFrame(() => {
         toast.style.opacity = "1";
         toast.style.transform = "translateY(0)";
     });
 
-    // Auto dismiss
     setTimeout(() => {
         toast.style.opacity = "0";
         toast.style.transform = "translateY(15px)";
