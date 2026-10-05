@@ -60,8 +60,13 @@
 
                 </div>
 
+                <!-- LOGIN TABS -->
+                <div class="login-tabs">
+                    <button type="button" class="login-tab active" id="tabPasswordBtn">Password</button>
+                    <button type="button" class="login-tab" id="tabOtpBtn">✉ Email OTP (Twilio)</button>
+                </div>
 
-                <!-- LOGIN FORM -->
+                <!-- LOGIN FORM (PASSWORD) -->
                 <form id="loginForm">
 
                     <div class="form-group">
@@ -129,6 +134,59 @@
                         class="login-btn"
                     >
                         Login
+                    </button>
+
+                </form>
+
+                <!-- LOGIN FORM (EMAIL OTP VIA TWILIO) -->
+                <form id="otpLoginForm" style="display: none;">
+
+                    <div class="form-group">
+                        <label for="otpEmail">Email Address</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input
+                                type="email"
+                                id="otpEmail"
+                                name="otpEmail"
+                                placeholder="you@example.com"
+                                style="flex: 1;"
+                            >
+                            <button
+                                type="button"
+                                id="sendLoginOtpBtn"
+                                class="otp-action-btn"
+                            >
+                                Send OTP
+                            </button>
+                        </div>
+                        <p style="font-size: 11px; color: #64748b; margin-top: 6px; line-height: 1.4;">
+                            A 6-digit one-time passcode will be delivered to your inbox via Twilio.
+                        </p>
+                    </div>
+
+                    <div class="form-group" id="loginOtpGroup" style="display: none;">
+                        <label for="loginOtpCode">Enter 6-Digit Code</label>
+                        <input
+                            type="text"
+                            id="loginOtpCode"
+                            name="loginOtpCode"
+                            placeholder="••••••"
+                            maxlength="6"
+                            autocomplete="one-time-code"
+                            style="letter-spacing: 6px; font-size: 18px; font-weight: 700; text-align: center;"
+                        >
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+                            <span id="loginOtpCountdown" style="font-size: 11px; color: #64748b;"></span>
+                            <a href="#" id="resendLoginOtpLink" style="font-size: 11px; color: #c62828; text-decoration: none; display: none; font-weight: 600;">Resend OTP</a>
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="login-btn"
+                        id="loginOtpSubmitBtn"
+                    >
+                        Login with OTP
                     </button>
 
                 </form>

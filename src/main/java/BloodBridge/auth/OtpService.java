@@ -17,10 +17,12 @@ public class OtpService {
 
     private static final Logger log = LoggerFactory.getLogger(OtpService.class);
     private final OtpVerificationRepository otpRepository;
+    private final TwilioEmailService twilioEmailService;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    public OtpService(OtpVerificationRepository otpRepository) {
+    public OtpService(OtpVerificationRepository otpRepository, TwilioEmailService twilioEmailService) {
         this.otpRepository = otpRepository;
+        this.twilioEmailService = twilioEmailService;
     }
 
     @Transactional
@@ -34,6 +36,11 @@ public class OtpService {
         otpRepository.save(verification);
 
         log.info("[OTP NOTIFICATION] Generated 6-digit code for {} ({}): {}", identifier, type, code);
+
+        if ("EMAIL".equalsIgnoreCase(type) || identifier.contains("@")) {
+            twilioEmailService.sendOtpEmail(identifier, code);
+        }
+
         return code;
     }
 

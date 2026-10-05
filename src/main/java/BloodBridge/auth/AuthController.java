@@ -1,6 +1,7 @@
 package BloodBridge.auth;
 
 import BloodBridge.auth.AuthDtos.LoginRequest;
+import BloodBridge.auth.AuthDtos.OtpLoginRequest;
 import BloodBridge.auth.AuthDtos.OtpResponse;
 import BloodBridge.auth.AuthDtos.RegisterRequest;
 import BloodBridge.auth.AuthDtos.SendOtpRequest;
@@ -16,6 +17,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -77,6 +80,35 @@ public class AuthController {
         securityContextRepository.saveContext(context, servletRequest, servletResponse);
 
         return UserResponse.from(authService.requireByEmail(authentication.getName()));
+    }
+
+    @PostMapping("/login/otp")
+    public UserResponse loginWithOtp(
+            @Valid @RequestBody OtpLoginRequest request,
+            HttpServletRequest servletRequest,
+            HttpServletResponse servletResponse) {
+        UserAccount user = authService.loginWithOtp(request.email(), request.code());
+
+        String roleName = user.getRole() != null ? user.getRole() : "ROLE_USER";
+        if (roleName.startsWith("ROLE_")) {
+            roleName = roleName.substring(5);
+        }
+
+        UserDetails userDetails = User
+                .withUsername(user.getEmail())
+                .password("")
+                .roles(roleName)
+                .build();
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authentication);
+        SecurityContextHolder.setContext(context);
+        securityContextRepository.saveContext(context, servletRequest, servletResponse);
+
+        return UserResponse.from(user);
     }
 
     @GetMapping("/csrf")

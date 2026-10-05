@@ -28,6 +28,11 @@ public final class AuthDtos {
             @NotBlank @Size(max = 72) String password) {
     }
 
+    public record OtpLoginRequest(
+            @NotBlank @Email @Size(max = 254) String email,
+            @NotBlank @Size(min = 6, max = 6) String code) {
+    }
+
     public record UserResponse(Long id, String fullName, String email, Instant createdAt, String role) {
 
         public UserResponse(Long id, String fullName, String email, Instant createdAt) {

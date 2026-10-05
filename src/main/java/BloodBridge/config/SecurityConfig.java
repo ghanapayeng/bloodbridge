@@ -64,13 +64,13 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/otp/**"))
+                        .ignoringRequestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/login/**", "/api/auth/otp/**"))
                 .securityContext(context -> context.securityContextRepository(securityContextRepository))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/", "/*.html", "/**.css", "/**.js", "/favicon.ico").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/auth/csrf", "/api/donors/verify/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/otp/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/login/**", "/api/auth/otp/**").permitAll()
                         .anyRequest().authenticated())
                 .build();
     }

@@ -52,6 +52,27 @@ public class AuthService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication is required."));
     }
 
+    @Transactional
+    public UserAccount loginWithOtp(String rawEmail, String code) {
+        String email = normaliseEmail(rawEmail);
+        otpService.verifyOtp(email, "EMAIL", code);
+
+        return userAccountRepository.findByEmail(email).orElseGet(() -> {
+            String namePart = email.split("@")[0];
+            String displayName = (namePart != null && !namePart.isBlank())
+                    ? Character.toUpperCase(namePart.charAt(0)) + namePart.substring(1)
+                    : "Donor";
+
+            UserAccount newUser = new UserAccount(
+                    displayName,
+                    email,
+                    passwordEncoder.encode(java.util.UUID.randomUUID().toString()),
+                    "ROLE_USER"
+            );
+            return userAccountRepository.save(newUser);
+        });
+    }
+
     public String normaliseEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
     }
