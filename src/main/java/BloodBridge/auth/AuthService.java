@@ -57,20 +57,8 @@ public class AuthService {
         String email = normaliseEmail(rawEmail);
         otpService.verifyOtp(email, "EMAIL", code);
 
-        return userAccountRepository.findByEmail(email).orElseGet(() -> {
-            String namePart = email.split("@")[0];
-            String displayName = (namePart != null && !namePart.isBlank())
-                    ? Character.toUpperCase(namePart.charAt(0)) + namePart.substring(1)
-                    : "Donor";
-
-            UserAccount newUser = new UserAccount(
-                    displayName,
-                    email,
-                    passwordEncoder.encode(java.util.UUID.randomUUID().toString()),
-                    "ROLE_USER"
-            );
-            return userAccountRepository.save(newUser);
-        });
+        return userAccountRepository.findByEmail(email).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND, "No account found with this email. Please sign up first."));
     }
 
     public String normaliseEmail(String email) {

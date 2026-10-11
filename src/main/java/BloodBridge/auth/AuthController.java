@@ -55,14 +55,14 @@ public class AuthController {
 
     @PostMapping("/otp/send")
     public ResponseEntity<OtpResponse> sendOtp(@Valid @RequestBody SendOtpRequest request) {
-        String code = otpService.sendOtp(request.identifier(), request.type());
-        return ResponseEntity.ok(new OtpResponse(true, "A 6-digit verification code has been sent.", code));
+        otpService.sendOtp(request.identifier(), request.type());
+        return ResponseEntity.ok(new OtpResponse(true, "A verification code has been sent to your email."));
     }
 
     @PostMapping("/otp/verify")
     public ResponseEntity<OtpResponse> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {
         boolean valid = otpService.verifyOtp(request.identifier(), request.type(), request.code());
-        return ResponseEntity.ok(new OtpResponse(valid, "Verification successful.", null));
+        return ResponseEntity.ok(new OtpResponse(valid, "Verification successful."));
     }
 
     @PostMapping("/login")

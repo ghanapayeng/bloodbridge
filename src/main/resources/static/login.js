@@ -172,10 +172,9 @@ function setupOtpLogin() {
                 codeInput.focus();
             }
 
-            const previewMsg = data.debugCode ? ` (Code: ${data.debugCode})` : "";
-            showToast(`Verification code sent to ${email} via Twilio!${previewMsg}`, "info");
+            showToast("Verification code sent to your email.", "info");
 
-            startOtpCooldown(45);
+            startOtpCooldown(60);
 
         } catch (err) {
             console.error("OTP send error:", err);

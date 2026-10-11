@@ -3,7 +3,9 @@ package BloodBridge.auth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -20,29 +22,26 @@ public class TwilioEmailService {
 
     private final boolean enabled;
     private final String apiUrl;
-    private final String accountSid;
-    private final String authToken;
+    private final String apiKeySid;
+    private final String apiKeySecret;
     private final String fromAddress;
     private final String fromName;
-    private final boolean trialFallback;
 
     private final HttpClient httpClient;
 
     public TwilioEmailService(
             @Value("${twilio.email.enabled:true}") boolean enabled,
             @Value("${twilio.email.api-url:https://comms.twilio.com/v1/Emails}") String apiUrl,
-            @Value("${twilio.email.account-sid:}") String accountSid,
-            @Value("${twilio.email.auth-token:}") String authToken,
+            @Value("${twilio.email.api-key-sid:}") String apiKeySid,
+            @Value("${twilio.email.api-key-secret:}") String apiKeySecret,
             @Value("${twilio.email.from-address:}") String fromAddress,
-            @Value("${twilio.email.from-name:BloodBridge}") String fromName,
-            @Value("${twilio.email.trial-fallback:true}") boolean trialFallback) {
+            @Value("${twilio.email.from-name:BloodBridge}") String fromName) {
         this.enabled = enabled;
         this.apiUrl = apiUrl;
-        this.accountSid = accountSid != null ? accountSid.trim() : "";
-        this.authToken = authToken != null ? authToken.trim() : "";
+        this.apiKeySid = apiKeySid != null ? apiKeySid.trim() : "";
+        this.apiKeySecret = apiKeySecret != null ? apiKeySecret.trim() : "";
         this.fromAddress = fromAddress != null ? fromAddress.trim() : "";
-        this.fromName = fromName != null ? fromName.trim() : "BloodBridge";
-        this.trialFallback = trialFallback;
+        this.fromName = (fromName != null && !fromName.isBlank()) ? fromName.trim() : "BloodBridge";
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
@@ -53,69 +52,63 @@ public class TwilioEmailService {
      *
      * @param recipientEmail destination email address
      * @param otpCode 6-digit one-time password
-     * @return true if email dispatch was accepted by Twilio or simulated
+     * @return true if email dispatch was accepted by Twilio
      */
     public boolean sendOtpEmail(String recipientEmail, String otpCode) {
-        if (!enabled || accountSid.isBlank() || authToken.isBlank()) {
-            log.info("[TWILIO EMAIL] Email dispatch skipped (credentials not configured in environment or disabled). Simulated OTP for {}: {}",
-                    recipientEmail, otpCode);
+        if (!enabled) {
+            log.info("[TWILIO EMAIL] Email dispatch is disabled by configuration (twilio.email.enabled=false).");
             return true;
+        }
+
+        if (apiKeySid.isBlank() || apiKeySecret.isBlank()) {
+            log.error("[TWILIO EMAIL] Twilio API Key credentials are missing. twilio.email.api-key-sid and twilio.email.api-key-secret must be configured.");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Email service is temporarily unconfigured. Please contact support.");
+        }
+
+        if (fromAddress.isBlank()) {
+            log.error("[TWILIO EMAIL] Sender address is missing. twilio.email.from-address must be configured.");
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Email service sender is unconfigured. Please contact support.");
         }
 
         if (recipientEmail == null || recipientEmail.isBlank()) {
             log.warn("[TWILIO EMAIL] Recipient email is blank. Skipping email send.");
-            return false;
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Recipient email address is required.");
         }
 
-        String subject = "Your BloodBridge Login Verification Code: " + otpCode;
+        String subject = "BloodBridge Verification Code: " + otpCode;
         String htmlBody = buildOtpHtmlBody(otpCode);
 
-        // Attempt 1: Standard branded BloodBridge OTP email
         try {
-            HttpResponse<String> response = executeSend(recipientEmail, subject, htmlBody);
+            HttpResponse<String> response = executeSend(fromAddress, recipientEmail, subject, htmlBody);
             int status = response.statusCode();
 
             if (status >= 200 && status < 300) {
-                log.info("[TWILIO EMAIL] Successfully sent OTP email to {} (status: {})", recipientEmail, status);
+                log.info("[TWILIO EMAIL] Verification email dispatched successfully to recipient (HTTP {})", status);
                 return true;
             }
 
             String responseBody = response.body() != null ? response.body() : "";
-            log.warn("[TWILIO EMAIL] Initial send to {} returned status {}: {}", recipientEmail, status, responseBody);
+            log.error("[TWILIO EMAIL] Failed to send OTP email. Twilio returned HTTP {}: {}", status, responseBody);
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Failed to deliver verification email. Please try again later.");
 
-            // Attempt 2: If Twilio Trial template restrictions are detected, fall back to approved trial template
-            if (trialFallback && status == 400 && responseBody.contains("approved template")) {
-                log.info("[TWILIO EMAIL] Twilio Trial template restriction detected. Retrying with approved trial template for {}...", recipientEmail);
-                HttpResponse<String> trialResponse = executeSend(
-                        recipientEmail,
-                        "Your Order Has Been Confirmed!",
-                        buildTrialApprovedHtmlBody()
-                );
-
-                if (trialResponse.statusCode() >= 200 && trialResponse.statusCode() < 300) {
-                    log.info("[TWILIO EMAIL] Approved Twilio trial template successfully accepted for delivery to {} (status: {}). OTP Code: {}",
-                            recipientEmail, trialResponse.statusCode(), otpCode);
-                    return true;
-                } else {
-                    log.error("[TWILIO EMAIL] Trial fallback send failed with status {}: {}",
-                            trialResponse.statusCode(), trialResponse.body());
-                }
-            }
+        } catch (ResponseStatusException rse) {
+            throw rse;
         } catch (Exception e) {
-            log.error("[TWILIO EMAIL] Error communicating with Twilio Comms API for {}: {}", recipientEmail, e.getMessage(), e);
+            log.error("[TWILIO EMAIL] Connection error communicating with Twilio Comms API: {}", e.getMessage());
+            throw new ResponseStatusException(HttpStatus.BAD_GATEWAY, "Unable to reach email delivery service. Please try again later.");
         }
-
-        return false;
     }
 
-    private HttpResponse<String> executeSend(String toEmail, String subject, String html) throws Exception {
-        String senderAddress = !fromAddress.isBlank() ? fromAddress : (accountSid + "@twilio.email");
-        String jsonPayload = "{\"from\": {\"address\": \"" + escapeJson(senderAddress) + "\", \"name\": \"" + escapeJson(fromName) + "\"}, " +
+    private HttpResponse<String> executeSend(String sender, String toEmail, String subject, String html) throws Exception {
+        String jsonPayload = "{\"from\": {\"address\": \"" + escapeJson(sender) + "\", \"name\": \"" + escapeJson(fromName) + "\"}, " +
                 "\"to\": [{\"address\": \"" + escapeJson(toEmail) + "\"}], " +
-                "\"content\": {\"subject\": \"" + escapeJson(subject) + "\", \"html\": \"" + escapeJson(html) + "\"}}";
+                "\"content\": {" +
+                "\"subject\": \"" + escapeJson(subject) + "\", " +
+                "\"html\": \"" + escapeJson(html) + "\"" +
+                "}}";
 
         String authHeader = "Basic " + Base64.getEncoder().encodeToString(
-                (accountSid + ":" + authToken).getBytes(StandardCharsets.UTF_8));
+                (apiKeySid + ":" + apiKeySecret).getBytes(StandardCharsets.UTF_8));
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(apiUrl))
@@ -129,30 +122,18 @@ public class TwilioEmailService {
     }
 
     private String buildOtpHtmlBody(String otpCode) {
-        return "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 28px; border: 1px solid #f1e5e5; border-radius: 14px; background: #ffffff;\">" +
-                "<div style=\"text-align: center; margin-bottom: 24px;\">" +
-                "<div style=\"font-size: 28px; font-weight: 800; color: #dc2626; letter-spacing: -0.5px;\">♥ Blood<span style=\"color: #1e293b;\">Bridge</span></div>" +
-                "<p style=\"color: #64748b; font-size: 13px; margin-top: 4px;\">Connecting Donors, Saving Lives</p>" +
+        return "<div style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 520px; margin: 0 auto; padding: 28px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;\">" +
+                "<h2 style=\"color: #dc2626; margin: 0 0 16px 0;\">BloodBridge</h2>" +
+                "<p style=\"color: #334155; font-size: 15px; margin: 0 0 16px 0;\">Hello,</p>" +
+                "<p style=\"color: #334155; font-size: 15px; margin: 0 0 12px 0;\">Your BloodBridge verification code is:</p>" +
+                "<div style=\"background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; text-align: center; margin: 0 0 16px 0;\">" +
+                "<span style=\"font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #dc2626;\">" + otpCode + "</span>" +
                 "</div>" +
-                "<div style=\"background: #fef2f2; border: 1px solid #fee2e2; border-radius: 10px; padding: 22px; text-align: center; margin-bottom: 24px;\">" +
-                "<p style=\"color: #991b1b; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin: 0 0 10px 0;\">Your Login / Verification OTP</p>" +
-                "<div style=\"font-size: 38px; font-weight: 900; letter-spacing: 8px; color: #dc2626; margin: 8px 0 12px;\">" + otpCode + "</div>" +
-                "<p style=\"color: #64748b; font-size: 12px; margin: 0;\">Valid for 5 minutes. Do not share this code with anyone.</p>" +
-                "</div>" +
-                "<p style=\"color: #475569; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;\">You requested a one-time verification code to sign in to BloodBridge. If you did not make this request, please safely ignore this email.</p>" +
-                "<hr style=\"border: none; border-top: 1px solid #f1e5e5; margin: 24px 0 16px 0;\" />" +
-                "<p style=\"color: #94a3b8; font-size: 11px; text-align: center; margin: 0;\">&copy; BloodBridge Emergency Blood Donation Network &bull; Secured with Twilio</p>" +
+                "<p style=\"color: #64748b; font-size: 13px; margin: 0 0 12px 0;\">This code will expire in 5 minutes.</p>" +
+                "<p style=\"color: #64748b; font-size: 13px; margin: 0 0 24px 0;\">If you did not request this code, please ignore this email.</p>" +
+                "<hr style=\"border: none; border-top: 1px solid #f1f5f9; margin: 0 0 16px 0;\" />" +
+                "<p style=\"color: #475569; font-size: 13px; margin: 0;\">Regards,<br/><strong>BloodBridge Team</strong></p>" +
                 "</div>";
-    }
-
-    private String buildTrialApprovedHtmlBody() {
-        return "<p><b>This is a test email from Twilio.</b></p>" +
-                "<h2>Thank you for your order!</h2>" +
-                "<p>We are excited to let you know that your order has been confirmed and is being processed.</p>" +
-                "<p>You will receive a shipping confirmation email once your items are on their way.</p>" +
-                "<p>Order Number: #12345</p>" +
-                "<p>Thank you for shopping with us!</p>" +
-                "<p>Best regards,<br/>The Team</p>";
     }
 
     private String escapeJson(String raw) {

@@ -19,7 +19,7 @@ public class OtpVerification {
     @Column(nullable = false, length = 254)
     private String identifier;
 
-    @Column(name = "otp_code", nullable = false, length = 6)
+    @Column(name = "otp_code", nullable = false, length = 128)
     private String otpCode;
 
     @Column(name = "otp_type", nullable = false, length = 32)
@@ -30,6 +30,9 @@ public class OtpVerification {
 
     @Column(nullable = false)
     private boolean verified;
+
+    @Column(name = "failed_attempts", nullable = false)
+    private int failedAttempts = 0;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -43,6 +46,7 @@ public class OtpVerification {
         this.otpType = otpType;
         this.expiresAt = expiresAt;
         this.verified = false;
+        this.failedAttempts = 0;
         this.createdAt = Instant.now();
     }
 
@@ -72,6 +76,14 @@ public class OtpVerification {
 
     public void setVerified(boolean verified) {
         this.verified = verified;
+    }
+
+    public int getFailedAttempts() {
+        return failedAttempts;
+    }
+
+    public void setFailedAttempts(int failedAttempts) {
+        this.failedAttempts = failedAttempts;
     }
 
     public Instant getCreatedAt() {

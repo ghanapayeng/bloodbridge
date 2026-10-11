@@ -55,6 +55,6 @@ public final class AuthDtos {
             @NotBlank @Size(min = 6, max = 6) String code) {
     }
 
-    public record OtpResponse(boolean success, String message, String debugCode) {
+    public record OtpResponse(boolean success, String message) {
     }
 }

@@ -6,8 +6,6 @@ const signupForm = document.getElementById("signupForm");
 
 let emailVerified = false;
 let phoneVerified = false;
-let currentEmailOtp = "";
-let currentPhoneOtp = "";
 
 document.addEventListener("DOMContentLoaded", async function () {
     const user = await getCurrentUser(false);
@@ -50,13 +48,10 @@ function setupOtpHandlers() {
                 }
 
                 if (emailOtpGroup) emailOtpGroup.style.display = "block";
-                currentEmailOtp = data.debugCode || "";
-                
-                const previewMsg = data.debugCode ? ` (Code: ${data.debugCode})` : "";
-                showToast(`Verification code sent to ${email}!${previewMsg}`, "info");
+                showToast(`Verification code sent to ${email}!`, "info");
 
                 // Start cooldown
-                startCooldown(sendEmailOtpBtn, "Send OTP", 45);
+                startCooldown(sendEmailOtpBtn, "Send OTP", 60);
 
             } catch (err) {
                 console.error("Email OTP error:", err);
@@ -143,13 +138,10 @@ function setupOtpHandlers() {
                 }
 
                 if (phoneOtpGroup) phoneOtpGroup.style.display = "block";
-                currentPhoneOtp = data.debugCode || "";
-
-                const previewMsg = data.debugCode ? ` (Code: ${data.debugCode})` : "";
-                showToast(`Verification code sent to ${phone}!${previewMsg}`, "info");
+                showToast(`Verification code sent to ${phone}!`, "info");
 
                 // Start cooldown
-                startCooldown(sendPhoneOtpBtn, "Send OTP", 45);
+                startCooldown(sendPhoneOtpBtn, "Send OTP", 60);
 
             } catch (err) {
                 console.error("Phone OTP error:", err);
