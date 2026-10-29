@@ -93,7 +93,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/", "/*.html", "/**.css", "/**.js", "/favicon.ico").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/auth/csrf", "/api/donors/verify/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/health", "/api/auth/csrf", "/api/donors/verify/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/login/**", "/api/auth/otp/**").permitAll()
                         .anyRequest().authenticated())
                 .build();

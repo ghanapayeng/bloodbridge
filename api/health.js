@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const upstreamRes = await fetch(`${BACKEND_BASE}/api/auth/csrf`, {
+    const upstreamRes = await fetch(`${BACKEND_BASE}/api/health`, {
       method: 'GET',
       headers: { 'Accept': 'application/json' }
     });

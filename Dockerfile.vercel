@@ -33,12 +33,11 @@ COPY --from=build --chown=bloodbridge:bloodbridge /app/target/*.jar app.jar
 
 USER bloodbridge
 
-# Vercel container runtime injects $PORT (defaults to 80 or dynamic port).
-# Local fallback defaults to 8080.
-ENV PORT=8080
+# Expose default port for local Docker documentation
 EXPOSE 8080
 
 # Configure JVM flags optimized for container environments:
+# -Dserver.port=${PORT:-8080} explicitly binds Spring Boot to Vercel's runtime $PORT
 # -XX:MaxRAMPercentage=75.0 dynamically sizes heap to container memory
 # -Djava.security.egd=file:/dev/./urandom speeds up cryptographic seed generation
-ENTRYPOINT ["sh", "-c", "exec java -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom -jar app.jar --server.port=${PORT:-8080}"]
+ENTRYPOINT ["sh", "-c", "exec java -Dserver.port=${PORT:-8080} -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom -jar app.jar"]
