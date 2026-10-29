@@ -6,12 +6,15 @@
   "services": {
     "web": {
       "root": "./",
+      "framework": "vite",
       "buildCommand": "node build.js",
       "outputDirectory": "public",
       "cleanUrls": true
     },
     "backend": {
       "root": "./",
+      "framework": "container",
+      "runtime": "container",
       "entrypoint": "Dockerfile.vercel"
     }
   },
