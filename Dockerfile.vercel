@@ -1,0 +1,44 @@
+# ==============================================================================
+# BloodBridge - Vercel Container Deployment Dockerfile
+# Compatible with Vercel Container Runtime & Fluid Compute
+# ==============================================================================
+
+# ---------- Stage 1: Build Java Application ----------
+FROM eclipse-temurin:25-jdk AS build
+
+WORKDIR /app
+
+# Copy Maven wrapper and POM first for efficient layer caching
+COPY pom.xml .
+COPY .mvn .mvn
+COPY mvnw .
+RUN chmod +x mvnw
+
+# Copy application source code
+COPY src src
+
+# Package production executable JAR without running tests during image build
+RUN ./mvnw clean package -DskipTests -B
+
+# ---------- Stage 2: Production JRE Runtime ----------
+FROM eclipse-temurin:25-jre
+
+WORKDIR /app
+
+# Run as non-root user for security best practices
+RUN groupadd -r bloodbridge && useradd -r -g bloodbridge -u 1001 bloodbridge
+
+# Copy packaged fat JAR from build stage
+COPY --from=build --chown=bloodbridge:bloodbridge /app/target/*.jar app.jar
+
+USER bloodbridge
+
+# Vercel container runtime injects $PORT (defaults to 80 or dynamic port).
+# Local fallback defaults to 8080.
+ENV PORT=8080
+EXPOSE 8080
+
+# Configure JVM flags optimized for container environments:
+# -XX:MaxRAMPercentage=75.0 dynamically sizes heap to container memory
+# -Djava.security.egd=file:/dev/./urandom speeds up cryptographic seed generation
+ENTRYPOINT ["sh", "-c", "exec java -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom -jar app.jar --server.port=${PORT:-8080}"]

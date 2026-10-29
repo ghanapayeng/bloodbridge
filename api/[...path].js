@@ -4,7 +4,8 @@
  * ensuring seamless cookie management, CSRF validation, and CORS compliance.
  */
 
-const BACKEND_BASE = (process.env.BACKEND_URL || 'http://localhost:8080').replace(/\/$/, '');
+const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1' || process.env.VERCEL_ENV === 'production';
+const BACKEND_BASE = (process.env.BACKEND_URL || (!isProduction ? 'http://localhost:8080' : '')).replace(/\/$/, '');
 
 const HOP_BY_HOP_HEADERS = new Set([
   'host',
@@ -93,7 +94,16 @@ module.exports = async (req, res) => {
     });
   }
 
-  // 4. Construct upstream target URL
+  // 4. Validate upstream target
+  if (!BACKEND_BASE) {
+    return res.status(502).json({
+      status: 502,
+      error: 'Backend Service Target Unconfigured',
+      message: 'In production, BACKEND_URL must be specified in Vercel project environment variables, or request routing must be handled via Vercel Services in vercel.json.',
+      timestamp: new Date().toISOString()
+    });
+  }
+
   const upstreamUrl = `${BACKEND_BASE}${req.url}`;
 
   // 5. Read body payload

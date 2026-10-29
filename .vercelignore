@@ -1,16 +1,20 @@
+# Local build outputs
 target/
-.mvn/
-mvnw
-mvnw.cmd
-pom.xml
+node_modules/
+
+# Version control and editor metadata
 .git/
 .github/
 .vscode/
+.idea/
+*.iml
+.DS_Store
+
+# Scratch files and temporary data
 data/
-*.java
-*.class
-*.jar
 *.log
+
+# Sensitive environment files (never upload or commit)
 .env
 .env.local
-Dockerfile
+.env.*.local

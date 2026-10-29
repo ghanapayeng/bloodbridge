@@ -2,7 +2,8 @@
  * BloodBridge Vercel Health Check Endpoint
  * GET /api/health
  */
-const BACKEND_BASE = (process.env.BACKEND_URL || 'http://localhost:8080').replace(/\/$/, '');
+const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1' || process.env.VERCEL_ENV === 'production';
+const BACKEND_BASE = (process.env.BACKEND_URL || (!isProduction ? 'http://localhost:8080' : '')).replace(/\/$/, '');
 
 module.exports = async (req, res) => {
   if (!res.status) {
@@ -26,6 +27,17 @@ module.exports = async (req, res) => {
   let backendStatus = 'UNKNOWN';
   let backendLatency = null;
   let backendError = null;
+
+  if (!BACKEND_BASE) {
+    return res.status(503).json({
+      status: 'DEGRADED',
+      gateway: 'BloodBridge Vercel Edge Serverless',
+      backendTarget: 'UNCONFIGURED',
+      backendStatus: 'CONFIG_ERROR',
+      error: 'BACKEND_URL environment variable is not defined in production.',
+      timestamp: new Date().toISOString()
+    });
+  }
 
   try {
     const upstreamRes = await fetch(`${BACKEND_BASE}/api/auth/csrf`, {

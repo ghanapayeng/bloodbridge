@@ -1,142 +1,161 @@
-# 🚀 BloodBridge Vercel Deployment Guide
+# 🚀 BloodBridge Vercel Services & Container Deployment Guide
 
-This guide explains how BloodBridge is configured to deploy and run seamlessly on **Vercel** with full static frontend hosting and a built-in Edge Serverless API Gateway.
+This guide details how BloodBridge is configured to deploy **all-on-Vercel** without rewriting the Java Spring Boot backend into Node.js. It leverages **Vercel Services** and the **Vercel Container Runtime (Fluid Compute)** to run the frontend and backend side-by-side in the same project.
 
 ---
 
 ## 🏗️ Architecture Overview
 
 ```
-                                  [ Browser User ]
-                                         │
-                         HTTPS requests  ▼  (e.g., bloodbridge.vercel.app)
-                  ┌──────────────────────────────────────────────┐
-                  │                 Vercel Edge                  │
-                  │                                              │
-                  │  Static Web Pages:       Serverless Proxy:   │
-                  │  (public/*.html, css, js) (api/[...path].js)  │
-                  └──────────────┬───────────────────┬───────────┘
-                                 │                   │
-                                 │                   │ /api/* proxied with
-                                 │                   │ cookie & CSRF rewriting
-                                 │                   ▼
-                                 │      [ Spring Boot Backend ]
-                                 │      (Upstream API Service)
-                                 │                   │
-                                 │                   ▼
-                                 │      [ TiDB Cloud Database ]
-                                 │      (Distributed Cloud MySQL)
+                                      [ User Browser ]
+                                             │
+                             HTTPS Request   ▼  (e.g., bloodbridge.vercel.app)
+                     ┌──────────────────────────────────────────────┐
+                     │                 Vercel Edge                  │
+                     │  (Root Project Router & Reverse Proxy)       │
+                     └──────────────┬───────────────────┬───────────┘
+                                    │                   │
+                     Path: /*       │                   │ Path: /api/*
+                     (Static/HTML)  ▼                   ▼ (REST Endpoints)
+                     ┌─────────────────────┐     ┌────────────────────────────┐
+                     │   Service: "web"    │     │     Service: "backend"     │
+                     │                     │     │                            │
+                     │ - Static Edge Asset │     │ - Java 25 Spring Boot      │
+                     │   Hosting (public/) │     │ - Container runtime (OCI)  │
+                     │ - Clean URLs        │     │ - Dynamic $PORT listener   │
+                     │ - Zero server lag   │     │ - Dockerfile.vercel        │
+                     └─────────────────────┘     └──────────────┬─────────────┘
+                                                                │
+                                              ┌─────────────────┴─────────────────┐
+                                              │                                   │
+                                              ▼                                   ▼
+                                   [ TiDB Cloud / MySQL ]                  [ Resend API ]
+                                   (Database via TLS)                      (Email OTP Delivery)
 ```
 
-### Why this architecture?
-1. **Zero Configuration on Vercel**: Vercel natively serves the static web assets (`public/`) at edge speed worldwide.
-2. **Built-in Serverless Proxy (`api/[...path].js`)**: Relays all `/api/*` REST endpoints to the live Spring Boot backend.
-3. **Cookie & CSRF Rewrite**: Transparently re-writes `Set-Cookie` (`JSESSIONID`, `XSRF-TOKEN`) to bind directly to the client's `*.vercel.app` domain with `SameSite=Lax`, completely eliminating third-party cookie restrictions.
-4. **CORS Preflight Acceleration**: Handles `OPTIONS` preflight requests directly on Vercel's edge with HTTP 200.
-5. **Cold-Start Resilience**: Detects backend server cold starts and provides graceful JSON feedback rather than connection drops.
+### Key Architectural Highlights:
+1. **True Polyglot Monorepo on Vercel**: Uses `vercel.json`'s `services` block to deploy the static web frontend (`web`) and the Spring Boot backend (`backend`) within the same Vercel project and URL.
+2. **Containerized Spring Boot Function**: The backend is packaged via `Dockerfile.vercel` using a multi-stage Eclipse Temurin 25 build, running as an unprivileged user (`bloodbridge`) and dynamically binding to the runtime port specified by `$PORT`.
+3. **No Node.js Backend Rewrite**: 100% of existing Java Spring Boot controllers, entities, repositories, Spring Security rules, CSRF verification, and database migrations are preserved intact.
+4. **No Production `localhost:8080` Dependency**: In production, requests to `/api/*` are routed directly to the containerized `backend` service. Any legacy proxy gateway explicitly rejects unconfigured calls with HTTP 502 rather than attempting invalid localhost connections.
+5. **Secure Credential Isolation**: Database credentials (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`) and the Resend API key (`RESEND_API_KEY`, `RESEND_FROM`) are stored in Vercel's encrypted Environment Variables and injected server-side only.
 
 ---
 
-## ⚡ Option 1: Deploy via Vercel Web UI (Recommended)
-
-1. **Push your repository** to GitHub.
-2. Go to [https://vercel.com/new](https://vercel.com/new) and log in.
-3. **Import** the `bloodbridge` repository.
-4. In the **Configure Project** screen:
-   - **Framework Preset**: Leave as `Other` (or auto-detected).
-   - **Root Directory**: `./` (Default root).
-   - **Build Command**: `node build.js` (Configured automatically via `vercel.json` / `package.json`).
-   - **Output Directory**: `public` (Configured automatically via `vercel.json`).
-5. *(Optional)* **Environment Variables**:
-   - `BACKEND_URL`: URL of your deployed Spring Boot backend (defaults to `http://localhost:8080`). Set this to your live production backend URL.
-6. Click **Deploy**!
-
-Within **30-45 seconds**, your app will be live at `https://<your-project>.vercel.app`!
-
----
-
-## 💻 Option 2: Deploy via Vercel CLI
-
-If you have the Vercel CLI installed:
-
-```bash
-# 1. Install Vercel CLI if needed
-npm install -g vercel
-
-# 2. Login to Vercel
-vercel login
-
-# 3. Deploy to preview
-vercel
-
-# 4. Deploy to production
-vercel --prod
-```
-
----
-
-## 🧪 Local Testing (Simulate Vercel Locally)
-
-You can run the application locally exactly as it behaves on Vercel:
-
-```bash
-# 1. Build assets into /public
-npm run build
-
-# 2. Start local Vercel-simulation dev server (port 3000)
-npm run dev
-```
-
-Visit **`http://localhost:3000`** in your browser. All `/api/*` requests will be proxied to the live backend.
-
-### Run Automated Verification Test Suite
-```bash
-npm test
-```
-This runs 7 automated end-to-end checks:
-- ✅ Asset build verification
-- ✅ Serverless handlers integrity
-- ✅ `/api/health` connectivity check
-- ✅ CSRF token extraction and cookie rewriting
-- ✅ CORS preflight OPTIONS resolution
-- ✅ Static file serving and clean URL routing
-- ✅ End-to-end registration, login, and session validation
-
----
-
-## 🔍 Health Check & Diagnostics
-
-Once deployed to Vercel, you can test connectivity at any time by visiting:
-
-```
-https://<your-app>.vercel.app/api/health
-```
-
-Example response:
-```json
-{
-  "status": "HEALTHY",
-  "gateway": "BloodBridge Vercel Edge Serverless",
-  "backendTarget": "http://localhost:8080",
-  "backendStatus": "ONLINE",
-  "latency": "1450ms",
-  "error": null,
-  "timestamp": "2026-10-30T00:00:00.000Z"
-}
-```
-
----
-
-## 📁 Key Files Added for Vercel
+## 📁 Deployment Configuration Files
 
 | File | Purpose |
 | :--- | :--- |
-| `vercel.json` | Root Vercel configuration specifying build command, public directory, security headers, clean URLs, and rewrites. |
-| `package.json` | Node.js project manifest enabling Vercel build detection and scripts (`build`, `dev`, `test`). |
-| `build.js` | Zero-dependency build script that syncs assets from `src/main/resources/static` to `public/`. |
-| `api/[...path].js` | Catch-all Vercel Serverless Function proxying all API requests, rewriting cookies, and handling CSRF. |
-| `api/index.js` | Handles root `/api` endpoint requests. |
-| `api/health.js` | Dedicated health-check route returning gateway and backend diagnostics. |
-| `.vercelignore` | Excludes Java source files, Maven artifacts, and binaries to keep deployment uploads fast and small. |
-| `dev-server.js` | Local HTTP development server simulating Vercel behavior on port 3000. |
-| `test-proxy.js` | Automated 7-step test suite validating all Vercel functionality. |
+| `vercel.json` | Configures Vercel Services declaring `web` (static frontend) and `backend` (containerized Spring Boot), with rewrites mapping `/api/(.*)` to the backend service. |
+| `Dockerfile.vercel` | Multi-stage production container build (Eclipse Temurin JDK 25 builder $\rightarrow$ JRE 25 runtime). Runs unprivileged, optimizes JVM RAM allocation (`-XX:MaxRAMPercentage=75.0`), and binds to `${PORT:-8080}`. |
+| `src/main/resources/application.properties` | Configures `server.port=${PORT:8080}` ensuring dynamic port listening on Vercel while preserving local 8080 default. |
+| `build.js` | Synchronizes static assets from `src/main/resources/static/` into `public/` for the `web` service. |
+| `api/[...path].js` & `api/health.js` | Serverless gateway fallback. Removes production dependency on `localhost:8080` and provides diagnostic status. |
+| `.vercelignore` | Excludes local build directories (`target/`, `node_modules/`, `data/`) while preserving Java sources, Maven wrappers, and Dockerfiles needed for Vercel container builds. |
+| `.env.example` | Template documenting all environment variables for Vercel Project Settings. |
+
+---
+
+## ⚙️ Step-by-Step Vercel Deployment
+
+### Step 1: Push Repository to GitHub
+Ensure all changes are committed and pushed to your remote repository:
+```bash
+git add .
+git commit -m "Configure Vercel Services and Container deployment for Spring Boot backend"
+git push origin main
+```
+
+### Step 2: Configure Environment Variables in Vercel
+Before triggering the deployment build, set your secrets in the Vercel Dashboard under:
+**Project Settings $\rightarrow$ Environment Variables**:
+
+| Variable Name | Environment | Example / Value | Description |
+| :--- | :--- | :--- | :--- |
+| `DB_URL` | Production, Preview | `jdbc:mysql://gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/blood_bridge?useSSL=true&sslMode=VERIFY_IDENTITY` | TiDB / MySQL JDBC connection string |
+| `DB_USERNAME` | Production, Preview | `your_user.root` | Database username |
+| `DB_PASSWORD` | Production, Preview | `your_secure_password` | Database password |
+| `RESEND_API_KEY` | Production, Preview | `re_123456789...` | API key from [Resend](https://resend.com/api-keys) |
+| `RESEND_FROM` | Production, Preview | `onboarding@resend.dev` (or verified domain) | Verified sender email |
+| `SPRING_PROFILES_ACTIVE` | Production, Preview | `local` | Spring active profile |
+| `JPA_SHOW_SQL` | Production, Preview | `false` | SQL query logging |
+
+> [!IMPORTANT]
+> Mark `DB_PASSWORD` and `RESEND_API_KEY` as **Secret** / encrypted in Vercel to protect them from exposure.
+
+---
+
+### Step 3: Deploy via Vercel Web Dashboard (Recommended)
+
+1. Navigate to [vercel.com/new](https://vercel.com/new).
+2. Select your `bloodbridge` Git repository and click **Import**.
+3. Under **Project Settings**:
+   - Vercel will read `vercel.json` and automatically recognize the multi-service configuration (`web` and `backend`).
+4. Click **Deploy**.
+5. Vercel will:
+   - Build the `web` service by running `node build.js` and publishing `public/`.
+   - Build the `backend` service by executing `Dockerfile.vercel` and deploying the container image to Fluid compute.
+   - Bind public routes: `/api/*` to the container and all other paths to the static web frontend.
+
+---
+
+### Step 4: Deploy via Vercel CLI (Alternative)
+
+If using the command line:
+
+```bash
+# 1. Login to Vercel
+vercel login
+
+# 2. Link your local project
+vercel link
+
+# 3. Pull or set environment variables
+vercel env add DB_URL
+vercel env add DB_USERNAME
+vercel env add DB_PASSWORD
+vercel env add RESEND_API_KEY
+
+# 4. Deploy to production
+vercel --prod --non-interactive
+```
+
+---
+
+## 🔍 Verification & Health Checks
+
+Once deployed, verify that both the frontend and containerized backend are operational:
+
+1. **Frontend Check**:
+   Open `https://<your-project>.vercel.app/` in your browser. Verify the landing page, clean URLs (`/login`, `/signup`, `/dashboard`), and asset loading.
+
+2. **Backend CSRF Endpoint**:
+   ```bash
+   curl -i https://<your-project>.vercel.app/api/auth/csrf
+   ```
+   Should return HTTP 200 with the CSRF token and `XSRF-TOKEN` cookie from the Spring Boot container.
+
+3. **Backend Health Diagnostic**:
+   ```bash
+   curl -s https://<your-project>.vercel.app/api/health
+   ```
+
+---
+
+## ⚠️ Requirements & Limitations (Requirement 12)
+
+If your deployment encounters issues or container builds fail, verify the following account-level requirements:
+
+1. **Vercel Services Beta Access**:
+   - Vercel Services is in **Beta**. It is available across Hobby, Pro, and Enterprise tiers.
+   - If your account does not yet have Services beta enabled or the project was created under legacy project settings, the build logs will report `services is not supported in vercel.json`.
+   - **Resolution**: Enable Beta Features in your Vercel Account / Team Settings under **Feature Previews $\rightarrow$ Services**, or deploy the project via Vercel Container Function directly (`vercel project update --framework container`).
+
+2. **Vercel Container Runtime Limits**:
+   - Maximum compressed layer size: 2 GB.
+   - Maximum total image size: 15 GB.
+   - Fluid compute memory: 1024 MB default (sufficient for Eclipse Temurin JRE 25 with `-XX:MaxRAMPercentage=75.0`).
+   - The Spring Boot container must bind to `$PORT` (configured automatically in `Dockerfile.vercel` and `application.properties`).
+
+3. **Outbound Database Connectivity**:
+   - Your MySQL / TiDB database host must be accessible from Vercel's serverless IP pool (or allow `0.0.0.0/0` with TLS encryption enabled, standard for TiDB Cloud Serverless clusters).
