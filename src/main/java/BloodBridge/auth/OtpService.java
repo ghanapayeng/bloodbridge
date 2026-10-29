@@ -16,6 +16,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import java.util.Optional;
 
+import BloodBridge.notification.ResendEmailService;
+
 @Service
 public class OtpService {
 
@@ -25,12 +27,12 @@ public class OtpService {
     private static final int MAX_HOURLY_REQUESTS = 5;
 
     private final OtpVerificationRepository otpRepository;
-    private final TwilioEmailService twilioEmailService;
+    private final ResendEmailService resendEmailService;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    public OtpService(OtpVerificationRepository otpRepository, TwilioEmailService twilioEmailService) {
+    public OtpService(OtpVerificationRepository otpRepository, ResendEmailService resendEmailService) {
         this.otpRepository = otpRepository;
-        this.twilioEmailService = twilioEmailService;
+        this.resendEmailService = resendEmailService;
     }
 
     @Transactional
@@ -66,12 +68,12 @@ public class OtpService {
         OtpVerification verification = new OtpVerification(identifier, hashedCode, type, expiresAt);
         otpRepository.save(verification);
 
-        log.info("[OTP SERVICE] Verification code requested for {} ({})", identifier, type);
-
-        // 5. Dispatch email via Twilio
-        if ("EMAIL".equalsIgnoreCase(type) || identifier.contains("@")) {
-            twilioEmailService.sendOtpEmail(identifier, code);
+        // 5. Dispatch email via Resend API
+        if ("EMAIL".equalsIgnoreCase(type)) {
+            resendEmailService.sendOtpEmail(identifier, code, 5);
         }
+
+        log.info("[OTP SERVICE] Verification code generated and dispatched for {} ({})", identifier, type);
     }
 
     @Transactional
@@ -130,6 +132,14 @@ public class OtpService {
         String identifier = normalizeIdentifier(rawIdentifier, type);
         String hashedCode = hashOtp(identifier, code);
         Instant expiresAt = Instant.now().plus(5, ChronoUnit.MINUTES);
+        OtpVerification verification = new OtpVerification(identifier, hashedCode, type, expiresAt);
+        otpRepository.save(verification);
+    }
+
+    public void createExpiredOtpForTesting(String rawIdentifier, String type, String code) {
+        String identifier = normalizeIdentifier(rawIdentifier, type);
+        String hashedCode = hashOtp(identifier, code);
+        Instant expiresAt = Instant.now().minus(1, ChronoUnit.MINUTES);
         OtpVerification verification = new OtpVerification(identifier, hashedCode, type, expiresAt);
         otpRepository.save(verification);
     }

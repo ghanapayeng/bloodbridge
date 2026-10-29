@@ -7,7 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 async function loadCertificates() {
     try {
-        const res = await fetch("/api/donations/certificates");
+        const certUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/donations/certificates") : "/api/donations/certificates";
+        const res = await fetch(certUrl, { credentials: "include" });
         if (res.status === 401) {
             window.location.href = "login.html";
             return;

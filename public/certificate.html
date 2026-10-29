@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate of Appreciation | BloodBridge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=DM+Sans:wght@400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #0f172a;
+            color: #1e293b;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        .action-toolbar {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            color: #0f172a;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            border: 1px solid #334155;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-action:hover {
+            background: #f1f5f9;
+            transform: translateY(-1px);
+        }
+        .btn-print {
+            background: linear-gradient(135deg, #e11d48, #be123c);
+            color: #ffffff;
+            border: none;
+            box-shadow: 0 4px 14px rgba(225, 29, 72, 0.4);
+        }
+        .btn-print:hover {
+            background: linear-gradient(135deg, #be123c, #9f1239);
+        }
+
+        /* Certificate Frame */
+        .cert-container {
+            width: 100%;
+            max-width: 920px;
+            background: #fffdfa;
+            border: 12px solid #b45309;
+            border-image: linear-gradient(to bottom right, #f59e0b, #d97706, #92400e, #d97706, #f59e0b) 1;
+            padding: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .cert-inner {
+            border: 2px solid #d97706;
+            padding: 40px 50px;
+            text-align: center;
+            position: relative;
+            background: radial-gradient(circle at 50% 50%, #ffffff 0%, #fffbf5 100%);
+        }
+        .cert-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 260px;
+            color: rgba(225, 29, 72, 0.03);
+            user-select: none;
+            pointer-events: none;
+            font-weight: 900;
+        }
+        .cert-header {
+            font-family: 'Cinzel', serif;
+            font-size: 15px;
+            letter-spacing: 5px;
+            color: #92400e;
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .cert-title {
+            font-family: 'Cinzel', serif;
+            font-size: 34px;
+            font-weight: 800;
+            color: #881337;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.05);
+        }
+        .cert-divider {
+            width: 140px;
+            height: 3px;
+            background: linear-gradient(to right, transparent, #b45309, transparent);
+            margin: 0 auto 24px;
+        }
+        .cert-subtitle {
+            font-size: 15px;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+        .cert-name {
+            font-family: 'Great Vibes', cursive;
+            font-size: 58px;
+            color: #0f172a;
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+        .cert-text {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #334155;
+            max-width: 650px;
+            margin: 0 auto 28px;
+        }
+        .cert-highlight {
+            font-weight: 700;
+            color: #be123c;
+        }
+        .cert-details-grid {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px dashed #cbd5e1;
+            border-bottom: 1px dashed #cbd5e1;
+            padding: 18px 0;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .detail-item {
+            text-align: center;
+        }
+        .detail-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #64748b;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .detail-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .cert-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 20px;
+            padding: 0 20px;
+        }
+        .cert-seal {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #f59e0b, #b45309);
+            box-shadow: 0 4px 12px rgba(180, 83, 9, 0.35);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px dashed #fef3c7;
+        }
+        .signature-line {
+            width: 180px;
+            border-top: 1px solid #475569;
+            margin-top: 40px;
+            padding-top: 6px;
+            font-size: 12px;
+            color: #475569;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .cert-qr {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+        #certQrCode {
+            padding: 4px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+        }
+        .qr-caption {
+            font-size: 10px;
+            color: #64748b;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .action-toolbar {
+                display: none;
+            }
+            .cert-container {
+                box-shadow: none;
+                max-width: 100%;
+                border-width: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="action-toolbar">
+        <a href="donor.html" class="btn-action">← Back to Donor Profile</a>
+        <div style="display: flex; gap: 12px;">
+            <select id="certSelector" class="btn-action" style="outline: none;" onchange="onCertificateSelected(this.value)">
+                <option value="">Loading certificates...</option>
+            </select>
+            <button onclick="window.print()" class="btn-action btn-print">🖨 Print / Save PDF</button>
+        </div>
+    </div>
+
+    <div class="cert-container" id="certContainer">
+        <div class="cert-inner">
+            <div class="cert-watermark">🩸</div>
+            <div class="cert-header">BloodBridge National Donor Network</div>
+            <h1 class="cert-title">Certificate of Appreciation</h1>
+            <div class="cert-divider"></div>
+
+            <div class="cert-subtitle">This certificate is proudly awarded to</div>
+            <div class="cert-name" id="donorName">Loading Donor...</div>
+
+            <p class="cert-text">
+                In sincere recognition of your selfless dedication and humanitarian contribution by donating
+                <span class="cert-highlight" id="unitsDonated">1.0</span> unit(s) of lifesaving
+                <span class="cert-highlight" id="bloodGroup">Blood</span>.
+                Your voluntary donation helps preserve human life, strengthens emergency medical readiness, and inspires our entire community.
+            </p>
+
+            <div class="cert-details-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Donation Date</div>
+                    <div class="detail-value" id="donationDate">--</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Facility / Hospital</div>
+                    <div class="detail-value" id="hospitalName">--</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Location</div>
+                    <div class="detail-value" id="locationCity">--</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Certificate ID</div>
+                    <div class="detail-value" id="certNumber" style="font-family: monospace;">--</div>
+                </div>
+            </div>
+
+            <div class="cert-footer">
+                <div style="text-align: left;">
+                    <div style="font-family: 'Great Vibes', cursive; font-size: 26px; color: #1e293b;">BloodBridge Directorate</div>
+                    <div class="signature-line">Authorized Signatory</div>
+                </div>
+
+                <div class="cert-seal">
+                    <span style="font-size: 18px;">★</span>
+                    <span>Verified</span>
+                    <span style="font-size: 9px;">Life Saver</span>
+                </div>
+
+                <div class="cert-qr">
+                    <div id="certQrCode"></div>
+                    <span class="qr-caption">Scan to Verify</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="certificate.js"></script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verified Donor Card | BloodBridge</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .verify-card {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+            border: 1px solid #e2e8f0;
+            width: 440px;
+            max-width: 100%;
+            overflow: hidden;
+            text-align: center;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%);
+            color: white;
+            padding: 32px 24px;
+            position: relative;
+        }
+        .verified-seal {
+            width: 72px;
+            height: 72px;
+            background: #ffffff;
+            color: #059669;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin: 0 auto -36px;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 4px solid #ffffff;
+        }
+        .card-body {
+            padding: 48px 28px 28px;
+        }
+        .blood-badge-large {
+            display: inline-block;
+            background: #fee2e2;
+            color: #dc2626;
+            font-weight: 800;
+            font-size: 26px;
+            padding: 6px 20px;
+            border-radius: 12px;
+            margin: 12px 0 20px;
+        }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        .meta-item {
+            background: #f8fafc;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .meta-item strong {
+            font-size: 14px;
+            color: #1e293b;
+        }
+        .disclaimer-box {
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 11px;
+            color: #64748b;
+            line-height: 1.4;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="verify-card" id="cardContainer">
+    <div class="card-header">
+        <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9;">
+            BloodBridge Identity Network
+        </div>
+        <h2 style="margin: 6px 0 0; font-size: 22px; font-weight: 700;">Verified Donor Card</h2>
+    </div>
+
+    <div class="verified-seal" id="statusIcon">✓</div>
+
+    <div class="card-body">
+        <div id="loadingState" style="padding: 20px; color: #64748b;">
+            Verifying donor credentials...
+        </div>
+
+        <div id="verifiedState" style="display: none;">
+            <h3 id="donorNameDisplay" style="margin: 0; font-size: 20px; color: #0f172a;">—</h3>
+            <div id="verificationMsg" style="font-size: 12px; color: #059669; font-weight: 700; margin-top: 2px;">
+                Official BloodBridge Verified Donor
+            </div>
+
+            <div class="blood-badge-large" id="bloodGroupDisplay">—</div>
+
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <span>Eligibility</span>
+                    <strong id="eligibilityDisplay" style="color: #059669;">Eligible</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Total Donations</span>
+                    <strong id="donationsDisplay">0</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Member Since</span>
+                    <strong id="memberSinceDisplay">2026</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Card Status</span>
+                    <strong style="color: #059669;">Active & Valid</strong>
+                </div>
+            </div>
+
+            <div class="disclaimer-box">
+                🔒 <strong>Privacy-Safe Credential:</strong> Verified by the BloodBridge decentralized donor network. Medical history and personal contact details are protected under health privacy standards.
+            </div>
+
+            <div style="margin-top: 24px;">
+                <a href="index.html" style="font-size: 13px; font-weight: 600; color: #dc2626; text-decoration: none;">
+                    Visit BloodBridge Community →
+                </a>
+            </div>
+        </div>
+
+        <div id="errorState" style="display: none; padding: 10px 0;">
+            <h3 style="color: #dc2626; margin: 0 0 8px;">Verification Failed</h3>
+            <p id="errorMsgText" style="color: #64748b; font-size: 14px; margin: 0 0 16px;">The requested donor card could not be verified.</p>
+            <a href="index.html" style="display: inline-block; padding: 10px 20px; background: #1e293b; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600;">
+                Return to BloodBridge
+            </a>
+        </div>
+    </div>
+</div>
+
+<script src="api.js"></script>
+<script src="verify-donor.js"></script>
+</body>
+</html>

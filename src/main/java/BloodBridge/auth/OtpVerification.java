@@ -41,13 +41,17 @@ public class OtpVerification {
     }
 
     public OtpVerification(String identifier, String otpCode, String otpType, Instant expiresAt) {
+        this(identifier, otpCode, otpType, expiresAt, Instant.now());
+    }
+
+    public OtpVerification(String identifier, String otpCode, String otpType, Instant expiresAt, Instant createdAt) {
         this.identifier = identifier;
         this.otpCode = otpCode;
         this.otpType = otpType;
         this.expiresAt = expiresAt;
         this.verified = false;
         this.failedAttempts = 0;
-        this.createdAt = Instant.now();
+        this.createdAt = createdAt != null ? createdAt : Instant.now();
     }
 
     public Long getId() {

@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard | BloodBridge</title>
+
+    <link rel="stylesheet" href="dashboard.css">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+        rel="stylesheet">
+
+</head>
+
+
+<body>
+
+<div class="app">
+
+
+    <!-- ========================= -->
+    <!-- SIDEBAR -->
+    <!-- ========================= -->
+
+    <aside class="sidebar">
+
+        <!-- LOGO -->
+
+        <div class="logo">
+
+            <span class="heart">♥</span>
+
+            <span>
+                Blood<span>Bridge</span>
+            </span>
+
+        </div>
+
+
+        <!-- USER PROFILE -->
+
+        <div class="user-mini">
+
+            <div class="avatar" id="dashboardAvatar">
+                ?
+            </div>
+
+            <div>
+
+                <strong id="dashboardName">
+                    Your account
+                </strong>
+
+                <span>
+                    Donor
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- NAVIGATION -->
+
+        <nav class="sidebar-nav">
+
+            <p class="nav-title">
+                MAIN
+            </p>
+
+
+            <a
+                href="dashboard.html"
+                class="nav-link active"
+            >
+
+                <span>⌂</span>
+
+                Dashboard
+
+            </a>
+
+
+            <a
+                href="find-donors.html"
+                class="nav-link"
+            >
+
+                <span>⌕</span>
+
+                Find Donors
+
+            </a>
+
+
+            <a
+                href="request.html"
+                class="nav-link"
+            >
+
+                <span>＋</span>
+
+                Request Blood
+
+            </a>
+
+
+            <p class="nav-title">
+                MY ACTIVITY
+            </p>
+
+
+            <a
+                href="donor.html"
+                class="nav-link"
+            >
+
+                <span>♥</span>
+
+                My Donor Profile
+
+            </a>
+
+
+            <a
+                href="history.html"
+                class="nav-link"
+            >
+                <span>◷</span>
+                History
+            </a>
+
+            <a
+                href="certificate.html"
+                class="nav-link"
+            >
+                <span>📜</span>
+                Certificates
+            </a>
+
+            <p class="nav-title">
+                HOSPITAL & INVENTORY
+            </p>
+
+            <a
+                href="inventory.html"
+                class="nav-link"
+            >
+                <span>📦</span>
+                Blood Inventory
+            </a>
+
+            <a
+                href="transfers.html"
+                class="nav-link"
+            >
+                <span>⇄</span>
+                Transfers
+            </a>
+
+            <a
+                href="#"
+                onclick="openAnalyticsModal(); return false;"
+                class="nav-link"
+            >
+                <span>📈</span>
+                Demand Forecast
+            </a>
+
+            <a
+                href="#"
+                onclick="openFlaggedModal(); return false;"
+                class="nav-link"
+                id="sidebarFlaggedLink"
+            >
+                <span>⚠️</span>
+                Safety Flags
+            </a>
+        </nav>
+
+
+        <!-- SIDEBAR BOTTOM -->
+
+        <div class="sidebar-bottom">
+
+            <a
+                href="#"
+                class="nav-link"
+            >
+
+                <span>⚙</span>
+
+                Settings
+
+            </a>
+
+
+            <a
+                href="index.html"
+                class="nav-link logout"
+                id="logoutLink"
+            >
+
+                <span>↪</span>
+
+                Log out
+
+            </a>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- ========================= -->
+    <!-- MAIN CONTENT -->
+    <!-- ========================= -->
+
+    <main class="main">
+
+
+        <!-- ========================= -->
+        <!-- TOP BAR -->
+        <!-- ========================= -->
+
+        <header class="topbar">
+
+
+            <div class="mobile-logo">
+
+                <span class="heart">
+                    ♥
+                </span>
+
+                BloodBridge
+
+            </div>
+
+
+            <div class="topbar-right">
+
+
+                <!-- NOTIFICATIONS -->
+
+                <button
+                    class="notification-btn"
+                    onclick="showNotifications()"
+                >
+
+                    ♡
+
+                    <span class="notification-dot"></span>
+
+                </button>
+
+
+                <!-- PROFILE -->
+
+                <div class="profile-dropdown-wrapper">
+                    <button class="profile" id="userProfileBtn" type="button" aria-haspopup="true" aria-expanded="false" title="Account Menu">
+                        <div class="profile-avatar" id="dashboardProfileAvatar">?</div>
+                        <span id="topbarName">Your account</span>
+                        <span class="arrow" id="profileDropdownArrow">⌄</span>
+                    </button>
+
+                    <div class="profile-menu" id="profileMenu" role="menu" aria-label="Account Menu">
+                        <div class="profile-menu-header">
+                            <div class="menu-user-info">
+                                <strong id="menuUserName">User Account</strong>
+                                <span id="menuUserEmail">user@example.com</span>
+                            </div>
+                            <span class="menu-blood-badge" id="menuUserBloodGroup" title="Blood Group">—</span>
+                        </div>
+                        <div class="menu-divider"></div>
+                        <a href="donor.html" class="profile-menu-item" role="menuitem">
+                            <span class="item-icon">♥</span>
+                            <span>My Donor Profile</span>
+                        </a>
+                        <a href="history.html" class="profile-menu-item" role="menuitem">
+                            <span class="item-icon">◷</span>
+                            <span>Donation History</span>
+                        </a>
+                        <a href="find-donors.html" class="profile-menu-item" role="menuitem">
+                            <span class="item-icon">⌕</span>
+                            <span>Find Donors</span>
+                        </a>
+                        <a href="request.html" class="profile-menu-item" role="menuitem">
+                            <span class="item-icon">＋</span>
+                            <span>Request Blood</span>
+                        </a>
+                        <div class="menu-divider"></div>
+                        <button class="profile-menu-item logout-item" id="menuLogoutBtn" type="button" role="menuitem">
+                            <span class="item-icon">↪</span>
+                            <span>Sign out</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </header>
+
+
+
+        <!-- ========================= -->
+        <!-- DASHBOARD CONTENT -->
+        <!-- ========================= -->
+
+        <section class="dashboard">
+
+
+            <!-- ========================= -->
+            <!-- WELCOME -->
+            <!-- ========================= -->
+
+            <div class="welcome">
+
+
+                <div>
+
+
+                    <p class="date">
+                        THURSDAY, SEPTEMBER 10, 2026
+                    </p>
+
+
+                    <h1>
+
+                        Good morning,
+                        <span id="welcomeName">
+                            there
+                        </span>.
+
+                    </h1>
+
+
+                    <p>
+                        Here's what's happening around you today.
+                    </p>
+
+                </div>
+
+
+                <!-- AVAILABILITY -->
+
+                <button
+                    class="availability"
+                    onclick="toggleAvailability()"
+                >
+
+                    <span class="status-dot"></span>
+
+
+                    <span id="availabilityText">
+                        Available to donate
+                    </span>
+
+                </button>
+
+            </div>
+
+            <!-- ========================= -->
+            <!-- EMERGENCY ALERTS BANNER -->
+            <!-- ========================= -->
+            <div id="emergencyBannerContainer" class="emergency-banner-container"></div>
+
+            <!-- ========================= -->
+            <!-- SUMMARY CARDS -->
+            <!-- ========================= -->
+
+            <div class="summary-grid">
+
+
+                <!-- BLOOD GROUP -->
+
+                <div class="summary-card blood-card">
+
+
+                    <div class="card-heading">
+
+                        <span>
+                            YOUR BLOOD GROUP
+                        </span>
+
+                        <span class="card-icon">
+                            ♥
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="blood-group"
+                        id="dashboardBloodGroup"
+                    >
+                        B+
+                    </div>
+
+
+                    <p>
+                        Your blood type can help<br>
+                        people in your community.
+                    </p>
+
+
+                    <a href="donor.html">
+                        View profile →
+                    </a>
+
+                </div>
+
+
+
+                <!-- DONATIONS -->
+
+                <div class="summary-card">
+
+
+                    <div class="card-heading">
+
+                        <span>
+                            DONATIONS
+                        </span>
+
+                        <span class="card-icon">
+                            ♥
+                        </span>
+
+                    </div>
+
+
+                    <div class="big-number" id="dashboardDonationsCount">
+                        0
+                    </div>
+
+                    <p>
+                        Total donations
+                    </p>
+
+                    <div class="small-info">
+                        <span>
+                            Last donation
+                        </span>
+                        <strong id="dashboardLastDonationDate">
+                            None yet
+                        </strong>
+                    </div>
+
+                </div>
+
+                <!-- IMPACT -->
+                <div class="summary-card">
+
+                    <div class="card-heading">
+                        <span>
+                            YOUR IMPACT
+                        </span>
+                        <span class="card-icon">
+                            ✦
+                        </span>
+                    </div>
+
+                    <div class="big-number" id="dashboardImpactCount">
+                        0
+                    </div>
+
+                    <p>
+                        People you've helped
+                    </p>
+
+                    <div class="impact-message" id="dashboardImpactMessage">
+                        Every donation helps save a life. ❤️
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ========================= -->
+            <!-- MAIN GRID -->
+            <!-- ========================= -->
+
+            <div class="content-grid">
+
+
+                <!-- ========================= -->
+                <!-- PEOPLE WHO NEED HELP -->
+                <!-- ========================= -->
+
+                <section class="panel requests-panel">
+
+
+                    <div class="panel-header">
+
+
+                        <div>
+
+                            <p class="panel-label">
+                                NEAR YOU
+                            </p>
+
+
+                            <h2>
+                                People who need help
+                            </h2>
+
+                        </div>
+
+
+                        <a href="find-donors.html">
+                            View all →
+                        </a>
+
+                    </div>
+
+
+
+                    <!-- DYNAMIC OPEN REQUESTS LIST -->
+                    <div id="openRequestsContainer">
+                        <div style="padding: 24px; text-align: center; color: #64748b;">Loading open blood requests...</div>
+                    </div>
+
+                </section>
+
+
+
+                <!-- ========================= -->
+                <!-- RIGHT COLUMN -->
+                <!-- ========================= -->
+
+                <div class="right-column">
+
+
+                    <!-- ========================= -->
+                    <!-- PROFILE COMPLETION -->
+                    <!-- ========================= -->
+
+                    <section class="panel profile-panel">
+
+
+                        <div class="panel-header">
+
+
+                            <div>
+
+                                <p class="panel-label">
+                                    YOUR PROFILE
+                                </p>
+
+
+                                <h2>
+                                    Almost there!
+                                </h2>
+
+                            </div>
+
+
+                            <!-- DYNAMIC PERCENTAGE -->
+
+                            <span
+                                class="percentage"
+                                id="completionPercentage"
+                            >
+                                0%
+                            </span>
+
+                        </div>
+
+
+
+                        <!-- PROGRESS -->
+
+                        <div class="progress">
+
+                            <div
+                                class="progress-bar"
+                                id="profileProgress"
+                            ></div>
+
+                        </div>
+
+
+
+                        <!-- DYNAMIC MESSAGE -->
+
+                        <p id="completionMessage">
+                            Complete your profile to get better donor matches.
+                        </p>
+
+
+
+                        <a
+                            href="donor.html"
+                            class="complete-btn"
+                        >
+                            Complete profile
+                        </a>
+
+
+                    </section>
+
+
+
+                    <!-- ========================= -->
+                    <!-- QUICK ACTIONS -->
+                    <!-- ========================= -->
+
+                    <section class="panel quick-panel">
+
+
+                        <p class="panel-label">
+                            QUICK ACTIONS
+                        </p>
+
+
+                        <div class="quick-actions">
+
+
+                            <a href="request.html">
+
+
+                                <span class="quick-icon red">
+                                    ＋
+                                </span>
+
+
+                                <div>
+
+                                    <strong>
+                                        Request blood
+                                    </strong>
+
+
+                                    <small>
+                                        Need blood for someone?
+                                    </small>
+
+                                </div>
+
+
+                            </a>
+
+
+
+                            <a href="find-donors.html">
+
+
+                                <span class="quick-icon dark">
+                                    ⌕
+                                </span>
+
+
+                                <div>
+
+                                    <strong>
+                                        Find a donor
+                                    </strong>
+
+
+                                    <small>
+                                        Search compatible donors
+                                    </small>
+
+                                </div>
+
+
+                            </a>
+
+
+                        </div>
+
+                    </section>
+
+
+                </div>
+
+            </div>
+
+
+
+            <!-- ========================= -->
+            <!-- RECENT ACTIVITY -->
+            <!-- ========================= -->
+
+            <section class="panel activity-panel">
+
+
+                <div class="panel-header">
+
+
+                    <div>
+
+                        <p class="panel-label">
+                            RECENT ACTIVITY
+                        </p>
+
+
+                        <h2>
+                            Your activity
+                        </h2>
+
+                    </div>
+
+
+                    <a href="history.html">
+                        View history →
+                    </a>
+
+                </div>
+
+
+
+                <div class="activity-list" id="activityListContainer">
+                    <div style="padding: 20px; text-align: center; color: #64748b;">Loading recent activity...</div>
+                </div>
+
+            </section>
+
+            <!-- ========================= -->
+            <!-- MY REQUESTS & RESPONSES -->
+            <!-- ========================= -->
+            <section class="panel my-requests-panel" id="myRequestsSection" style="margin-top: 24px;">
+
+                <div class="panel-header">
+                    <div>
+                        <p class="panel-label">
+                            MY REQUESTS & RESPONSES
+                        </p>
+                        <h2>
+                            Requests you have created
+                        </h2>
+                    </div>
+
+                    <a href="request.html" style="display: inline-block; padding: 8px 16px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 600;">
+                        + New Request
+                    </a>
+                </div>
+
+                <div id="myRequestsContainer">
+                    <div style="padding: 24px; text-align: center; color: #64748b;">Loading your requests...</div>
+                </div>
+
+            </section>
+
+
+
+            <!-- ========================= -->
+            <!-- BOTTOM MESSAGE -->
+            <!-- ========================= -->
+
+            <div class="kind-message">
+
+
+                <span>
+                    ♥
+                </span>
+
+
+                <div>
+
+                    <strong>
+                        Every donation starts with someone willing to help.
+                    </strong>
+
+
+                    <p>
+                        Thank you for being that person.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+        </section>
+
+    </main>
+
+<!-- ========================= -->
+<!-- IN-APP MESSAGING MODAL -->
+<!-- ========================= -->
+<div class="modal-overlay" id="chatModal" style="display: none;">
+    <div class="chat-modal-card">
+        <div class="chat-modal-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div class="chat-user-avatar" id="chatRecipientAvatar">?</div>
+                <div>
+                    <h3 id="chatRecipientName" style="margin: 0; font-size: 16px; color: #1e293b;">Chat</h3>
+                    <small id="chatRequestSub" style="color: #64748b; font-size: 12px;">Blood Request</small>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" class="emergency-call-icon-btn" id="chatHeaderCallBtn" title="Start Urgent Voice Call">📞 Call</button>
+                <button type="button" class="chat-close-btn" onclick="closeChat()">✕</button>
+            </div>
+        </div>
+        <div class="chat-messages-container" id="chatMessagesContainer">
+            <div style="text-align: center; color: #94a3b8; padding: 20px;">Loading conversation...</div>
+        </div>
+        <form class="chat-input-bar" id="chatInputForm">
+            <input type="text" id="chatInputText" placeholder="Type a message to coordinate..." autocomplete="off" required>
+            <button type="submit" id="chatSendBtn">Send ➤</button>
+        </form>
+    </div>
+</div>
+
+<!-- ========================= -->
+<!-- IN-APP EMERGENCY VOICE CALL MODAL -->
+<!-- ========================= -->
+<div class="modal-overlay" id="callModal" style="display: none;">
+    <div class="call-modal-card">
+        <div class="call-pulse-ring">
+            <div class="call-avatar" id="callAvatar">📞</div>
+        </div>
+        <h3 id="callUserName" style="margin: 16px 0 4px; font-size: 20px; color: #1e293b;">Connecting...</h3>
+        <p id="callStatusText" style="margin: 0 0 20px; color: #64748b; font-size: 14px;">Calling for Urgent Blood Request...</p>
+        <div id="callTimer" style="display: none; font-size: 22px; font-weight: 700; color: #059669; margin-bottom: 20px;">00:00</div>
+
+        <!-- Incoming Call Actions -->
+        <div class="call-actions incoming-actions" id="incomingCallActions" style="display: none;">
+            <button type="button" class="call-action-btn accept-btn" onclick="acceptIncomingCall()">
+                <span>📞</span> Accept
+            </button>
+            <button type="button" class="call-action-btn decline-btn" onclick="rejectIncomingCall()">
+                <span>✕</span> Decline
+            </button>
+        </div>
+
+        <!-- Active/Outgoing Call Actions -->
+        <div class="call-actions" id="activeCallActions">
+            <button type="button" class="call-action-btn mute-btn" id="muteAudioBtn" onclick="toggleMuteAudio()">
+                <span id="muteIcon">🎙️</span> <span id="muteText">Mute</span>
+            </button>
+            <button type="button" class="call-action-btn end-btn" onclick="hangupCall()">
+                <span>🛑</span> End Call
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================= -->
+<!-- IN-APP NOTIFICATION CENTER MODAL -->
+<!-- ========================= -->
+<div class="modal-overlay" id="notificationModal" style="display: none;">
+    <div style="background: white; border-radius: 16px; width: 440px; max-width: 92%; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 40px rgba(0,0,0,0.15); overflow: hidden;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">🔔</span>
+                <h3 style="margin: 0; font-size: 16px; color: #1e293b;">Notifications</h3>
+                <span id="notifModalUnreadBadge" style="display: none; background: #dc2626; color: white; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 9999px;">0</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <button type="button" onclick="markAllNotificationsRead()" style="cursor: pointer; background: transparent; border: none; font-size: 12px; color: #2563eb; font-weight: 600;">Mark all read</button>
+                <button type="button" onclick="closeNotificationsModal()" style="cursor: pointer; background: transparent; border: none; font-size: 16px; color: #64748b;">✕</button>
+            </div>
+        </div>
+        <div id="notificationsListContainer" style="padding: 12px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 8px;">
+            <div style="text-align: center; color: #94a3b8; padding: 30px;">Loading notifications...</div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================= -->
+<!-- REQUEST TIMELINE MODAL -->
+<!-- ========================= -->
+<div class="modal-overlay" id="timelineModal" style="display: none;">
+    <div style="background: white; border-radius: 16px; width: 620px; max-width: 95%; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 40px rgba(0,0,0,0.15); overflow: hidden;">
+        <div style="padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 id="timelineModalTitle" style="margin: 0; font-size: 17px; color: #1e293b;">Request Lifecycle Timeline</h3>
+                <small id="timelineModalSub" style="color: #64748b; font-size: 13px;">Tracking blood request milestones</small>
+            </div>
+            <button type="button" onclick="closeTimelineModal()" style="cursor: pointer; background: transparent; border: none; font-size: 18px; color: #64748b;">✕</button>
+        </div>
+        <div style="padding: 20px 24px; overflow-y: auto;">
+            <!-- Stepper representation -->
+            <div id="timelineModalStepper" class="timeline-stepper"></div>
+            <!-- Event stream -->
+            <div id="timelineEventsContainer" style="margin-top: 24px; display: flex; flex-direction: column; gap: 14px;">
+                <div style="text-align: center; color: #94a3b8; padding: 20px;">Loading timeline events...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================= -->
+<!-- DEMAND FORECAST & ANALYTICS MODAL -->
+<!-- ========================= -->
+<div class="modal-overlay" id="analyticsModal" style="display: none;">
+    <div style="background: white; border-radius: 16px; width: 880px; max-width: 95%; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden;">
+        <div style="padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <h3 style="margin: 0; font-size: 18px; color: #1e293b;">📈 Blood Demand Analytics & Forecast</h3>
+                <small style="color: #64748b; font-size: 13px;">Predictive 7-day and 30-day demand modeling based on historical hospital consumption</small>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <a href="/api/export/requests/csv" class="btn-action-sm" download>📥 Requests (CSV)</a>
+                <a href="/api/export/donations/csv" class="btn-action-sm" download>📥 Donations (CSV)</a>
+                <a href="/api/export/inventory/csv" class="btn-action-sm" download>📥 Inventory (CSV)</a>
+                <button type="button" onclick="closeAnalyticsModal()" style="cursor: pointer; background: transparent; border: none; font-size: 18px; color: #64748b; margin-left: 8px;">✕</button>
+            </div>
+        </div>
+        <div style="padding: 24px; overflow-y: auto;">
+            <!-- Forecast Summary Stat Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px;">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 18px; border-radius: 12px;">
+                    <div style="font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase;">Available Inventory</div>
+                    <div id="forecastTotalInventory" style="font-size: 24px; font-weight: 800; color: #059669; margin-top: 4px;">-- Units</div>
+                </div>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 18px; border-radius: 12px;">
+                    <div style="font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase;">Past 30d Consumption</div>
+                    <div id="forecastHistorical30d" style="font-size: 24px; font-weight: 800; color: #2563eb; margin-top: 4px;">-- Units</div>
+                </div>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px 18px; border-radius: 12px;">
+                    <div style="font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase;">Projected 30d Demand</div>
+                    <div id="forecastProjectedMonthly" style="font-size: 24px; font-weight: 800; color: #d97706; margin-top: 4px;">-- Units</div>
+                </div>
+            </div>
+
+            <!-- Forecast Table -->
+            <div style="overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 20px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px; text-align: left;">
+                    <thead>
+                        <tr style="background: #f1f5f9; border-bottom: 1px solid #e2e8f0; color: #475569; font-weight: 700;">
+                            <th style="padding: 10px 14px;">Blood Group</th>
+                            <th style="padding: 10px 14px;">Current Stock</th>
+                            <th style="padding: 10px 14px;">7-Day Est. Demand</th>
+                            <th style="padding: 10px 14px;">30-Day Projection</th>
+                            <th style="padding: 10px 14px;">Shortage Risk</th>
+                            <th style="padding: 10px 14px;">Operational Recommendation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="forecastTableBody">
+                        <tr><td colspan="6" style="padding: 24px; text-align: center; color: #94a3b8;">Loading forecast models...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Recommendations Box -->
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 16px;">
+                <strong style="color: #1e40af; font-size: 14px; display: block; margin-bottom: 8px;">System Stock Recommendations:</strong>
+                <ul id="forecastRecommendationsList" style="margin: 0; padding-left: 20px; font-size: 13px; color: #1e3a8a; line-height: 1.6;">
+                    <li>Analyzing demand velocity...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================= -->
+<!-- SAFETY FLAGS & FRAUD REVIEW MODAL -->
+<!-- ========================= -->
+<div class="modal-overlay" id="flaggedRequestsModal" style="display: none;">
+    <div style="background: white; border-radius: 16px; width: 780px; max-width: 95%; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.2); overflow: hidden;">
+        <div style="padding: 18px 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0; font-size: 17px; color: #991b1b;">⚠️ Suspicious & Duplicate Request Reviews</h3>
+                <small style="color: #64748b; font-size: 13px;">Review automated security flags, velocity spikes, and duplicate patient references</small>
+            </div>
+            <button type="button" onclick="closeFlaggedModal()" style="cursor: pointer; background: transparent; border: none; font-size: 18px; color: #64748b;">✕</button>
+        </div>
+        <div id="flaggedRequestsContainer" style="padding: 20px 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
+            <div style="text-align: center; color: #94a3b8; padding: 30px;">Loading flagged safety requests...</div>
+        </div>
+    </div>
+</div>
+
+<!-- JAVASCRIPT -->
+<!-- ========================= -->
+
+<script src="api.js"></script>
+<script src="dashboard.js"></script>
+
+
+</body>
+
+</html>

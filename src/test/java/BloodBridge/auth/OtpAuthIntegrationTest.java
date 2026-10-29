@@ -11,20 +11,52 @@ import BloodBridge.auth.AuthDtos.OtpResponse;
 import BloodBridge.auth.AuthDtos.RegisterRequest;
 import BloodBridge.auth.AuthDtos.SendOtpRequest;
 import BloodBridge.auth.AuthDtos.UserResponse;
+import BloodBridge.auth.AuthDtos.VerifyOtpRequest;
+import BloodBridge.notification.ResendEmailService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 
 @SpringBootTest
 @Transactional
+@Import(OtpAuthIntegrationTest.MockEmailTestConfig.class)
 class OtpAuthIntegrationTest {
+
+    @TestConfiguration
+    static class MockEmailTestConfig {
+
+        public static final List<String> sentRecipients = new ArrayList<>();
+        public static final List<String> sentCodes = new ArrayList<>();
+
+        @Bean
+        @Primary
+        public ResendEmailService testResendEmailService() {
+            return new ResendEmailService("mock_key_123", "testing@bloodbridge.org") {
+                @Override
+                public void sendOtpEmail(String recipientEmail, String otpCode, int expiryMinutes) {
+                    sentRecipients.add(recipientEmail);
+                    sentCodes.add(otpCode);
+                }
+            };
+        }
+    }
 
     @Autowired
     private AuthController authController;
@@ -36,13 +68,15 @@ class OtpAuthIntegrationTest {
     private OtpService otpService;
 
     @Autowired
-    private UserAccountRepository userAccountRepository;
+    private OtpVerificationRepository otpRepository;
 
     @Autowired
-    private TwilioEmailService twilioEmailService;
+    private UserAccountRepository userAccountRepository;
 
     @BeforeEach
     void setUp() {
+        MockEmailTestConfig.sentRecipients.clear();
+        MockEmailTestConfig.sentCodes.clear();
         authService.register(new RegisterRequest("Existing User", "existing@example.com", "Password123!456"));
     }
 
@@ -93,6 +127,19 @@ class OtpAuthIntegrationTest {
             otpService.verifyOtp(email, "EMAIL", "654321");
         });
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("already been used"));
+    }
+
+    @Test
+    void testExpiredOtpFailsVerification() {
+        String email = "expired@example.com";
+        otpService.createExpiredOtpForTesting(email, "EMAIL", "998877");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            otpService.verifyOtp(email, "EMAIL", "998877");
+        });
+        assertEquals(HttpStatus.BAD_REQUEST, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("expired"));
     }
 
     @Test
@@ -100,12 +147,33 @@ class OtpAuthIntegrationTest {
         String email = "cooldown@example.com";
         otpService.sendOtp(email, "EMAIL");
 
+        // Verify email service was invoked
+        assertTrue(MockEmailTestConfig.sentRecipients.contains(email));
+
         // Rapid second request within 60s should be blocked
         ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
             otpService.sendOtp(email, "EMAIL");
         });
         assertEquals(HttpStatus.TOO_MANY_REQUESTS, ex.getStatusCode());
         assertTrue(ex.getReason().contains("Please wait"));
+    }
+
+    @Test
+    void testOtpHourlyRateLimiting() {
+        String email = "hourlylimit@example.com";
+
+        // Seed 5 verifications in the last hour (> 60s ago to bypass cooldown)
+        for (int i = 0; i < 5; i++) {
+            Instant createdAt = Instant.now().minus(2 + i, ChronoUnit.MINUTES);
+            OtpVerification v = new OtpVerification(email, "hash" + i, "EMAIL", Instant.now().plus(5, ChronoUnit.MINUTES), createdAt);
+            otpRepository.save(v);
+        }
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> {
+            otpService.sendOtp(email, "EMAIL");
+        });
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, ex.getStatusCode());
+        assertTrue(ex.getReason().contains("Too many verification requests"));
     }
 
     @Test
@@ -129,12 +197,6 @@ class OtpAuthIntegrationTest {
     }
 
     @Test
-    void testTwilioEmailServiceDisabledMode() {
-        boolean sent = twilioEmailService.sendOtpEmail("test@example.com", "123456");
-        assertTrue(sent);
-    }
-
-    @Test
     void testAuthControllerSendOtpDoesNotExposeCode() {
         ResponseEntity<OtpResponse> entity = authController.sendOtp(new SendOtpRequest("safe@example.com", "EMAIL"));
         assertNotNull(entity);
@@ -143,6 +205,21 @@ class OtpAuthIntegrationTest {
         assertNotNull(response);
         assertTrue(response.success());
         assertEquals("A verification code has been sent to your email.", response.message());
+
+        // Verify email was dispatched via Resend mock
+        assertTrue(MockEmailTestConfig.sentRecipients.contains("safe@example.com"));
+    }
+
+    @Test
+    void testAuthControllerVerifyOtpEndpoint() {
+        String email = "verify-endpoint@example.com";
+        otpService.createOtpForTesting(email, "EMAIL", "445566");
+
+        ResponseEntity<OtpResponse> entity = authController.verifyOtp(new VerifyOtpRequest(email, "EMAIL", "445566"));
+        assertNotNull(entity);
+        assertEquals(HttpStatus.OK, entity.getStatusCode());
+        assertTrue(entity.getBody().success());
+        assertEquals("Verification successful.", entity.getBody().message());
     }
 
     @Test

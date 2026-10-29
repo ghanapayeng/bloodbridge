@@ -20,7 +20,7 @@
 | **WebRTC Audio/Video Call** | [`CallSignal.java`](file:///home/ghanapayeng/Desktop/bloodbridge/src/main/java/BloodBridge/call/CallSignal.java), [`CallService.java`](file:///home/ghanapayeng/Desktop/bloodbridge/src/main/java/BloodBridge/call/CallService.java) | WebRTC controller in [`dashboard.js`](file:///home/ghanapayeng/Desktop/bloodbridge/src/main/resources/static/dashboard.js) |
 | **Certificates & Verification** | [`Donation.java`](file:///home/ghanapayeng/Desktop/bloodbridge/src/main/java/BloodBridge/donation/Donation.java) | [`certificate.html`](file:///home/ghanapayeng/Desktop/bloodbridge/src/main/resources/static/certificate.html), [`verify-donor.html`](file:///home/ghanapayeng/Desktop/bloodbridge/src/main/resources/static/verify-donor.html) |
 | **System Seeding** | [`DevDataInitializer.java`](file:///home/ghanapayeng/Desktop/bloodbridge/src/main/java/BloodBridge/config/DevDataInitializer.java) | Automatically loads mock data on startup |
-| **Cloud Hosting (Render)** | [`Dockerfile`](file:///home/ghanapayeng/Desktop/bloodbridge/Dockerfile) | Production URL: [https://bloodbridge-wzdp.onrender.com](https://bloodbridge-wzdp.onrender.com) |
+| **Container Hosting** | [`Dockerfile`](file:///home/ghanapayeng/Desktop/bloodbridge/Dockerfile) | Exposes port 8080 for cloud container platforms |
 | **Production Database (TiDB)** | [`application.properties`](file:///home/ghanapayeng/Desktop/bloodbridge/src/main/resources/application.properties), [`.env.example`](file:///home/ghanapayeng/Desktop/bloodbridge/.env.example) | Distributed MySQL-compatible cloud cluster (port 4000/SSL) |
 
 ---

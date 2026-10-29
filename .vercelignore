@@ -1,0 +1,16 @@
+target/
+.mvn/
+mvnw
+mvnw.cmd
+pom.xml
+.git/
+.github/
+.vscode/
+data/
+*.java
+*.class
+*.jar
+*.log
+.env
+.env.local
+Dockerfile

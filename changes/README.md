@@ -17,15 +17,17 @@
 | **[04_FRONTEND_UI_AND_WORKFLOWS.md](file:///home/ghanapayeng/Desktop/bloodbridge/changes/04_FRONTEND_UI_AND_WORKFLOWS.md)** | Complete frontend breakdown: 11 HTML pages, modular CSS stylesheets, client JS controllers, and WebRTC. |
 | **[05_TESTING_AND_VERIFICATION.md](file:///home/ghanapayeng/Desktop/bloodbridge/changes/05_TESTING_AND_VERIFICATION.md)** | Test suite reference covering fraud detection, smart matching, eligibility, and integration testing. |
 | **[06_AI_AGENT_MANIFEST.md](file:///home/ghanapayeng/Desktop/bloodbridge/changes/06_AI_AGENT_MANIFEST.md)** | **Quickstart guide for AI agents**: conventions, do's & don'ts, common gotchas, and extension recipes. |
+| **[07_VERCEL_DEPLOYMENT_ARCHITECTURE.md](file:///home/ghanapayeng/Desktop/bloodbridge/changes/07_VERCEL_DEPLOYMENT_ARCHITECTURE.md)** | **Vercel Hosting Architecture**: Edge static distribution, serverless reverse proxy, cookie rewriting, CSRF, and CORS. |
 
 ---
 
 ## 🚀 Quick Snapshot of the System
 
 - **Application Name**: BloodBridge (Intelligent Emergency Blood Donation & Hospital Network)
-- **Live Production URL**: [https://bloodbridge-wzdp.onrender.com](https://bloodbridge-wzdp.onrender.com)
+- **Deployment Architecture**: Vercel Edge Serverless Gateway & Containerized Backend
 - **Production Infrastructure**:
-  - **Hosting**: Render ([bloodbridge-wzdp.onrender.com](https://bloodbridge-wzdp.onrender.com)) running multi-stage Docker container.
+  - **Frontend / Edge**: Vercel (Edge CDN + Serverless Proxy).
+  - **Backend**: Containerized Spring Boot (port 8080) running multi-stage Docker container.
   - **Database**: TiDB Cloud (distributed MySQL-compatible cloud cluster).
 - **Primary Tech Stack**:
   - **Backend**: Spring Boot 4.1.1, Java 25, Spring Data JPA, Spring Security (Session-based + CSRF), Hibernate ORM.

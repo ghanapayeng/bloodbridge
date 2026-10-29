@@ -12,7 +12,7 @@ This document details the high-level architecture, design patterns, security mod
 | **Framework** | Spring Boot 4.1.1 | Starters: `spring-boot-starter-webmvc`, `spring-boot-starter-data-jpa`, `spring-boot-starter-security`, `spring-boot-starter-validation`. |
 | **Persistence / ORM** | Hibernate 6+ / Spring Data JPA | Auto DDL management via `spring.jpa.hibernate.ddl-auto=update`. |
 | **Databases** | TiDB Cloud & H2 / MySQL / PostgreSQL | Production runs on **TiDB Cloud** (distributed MySQL-wire compatible database). Local/Test runs H2 in-memory or MySQL; configured via `.env` / environment variables. |
-| **Hosting & PaaS** | Render Cloud Platform | Live production instance: [https://bloodbridge-wzdp.onrender.com](https://bloodbridge-wzdp.onrender.com) |
+| **Hosting & Platform** | Vercel Edge + Containerized Backend | Static frontend & Serverless Gateway on Vercel; Spring Boot backend container (port 8080). |
 | **Authentication & Security** | Spring Security 6+ | Stateful HTTP Session (`HttpSessionSecurityContextRepository`), salted BCrypt password hashing, Cookie-backed CSRF protection. |
 | **Frontend Runtime** | Native Web Standards | HTML5, CSS3 Custom Properties Design System, ES6+ Vanilla JavaScript. Zero external UI framework runtime dependencies. |
 | **Signaling & Comms** | WebRTC & REST Signaling | In-memory peer-to-peer signaling store for audio/video calls (`/api/call`) + request-scoped chat threads (`/api/chat`). |
@@ -103,10 +103,10 @@ Security is configured in [`SecurityConfig.java`](file:///home/ghanapayeng/Deskt
    - Fallback defaults are configured in [`application.properties`](file:///home/ghanapayeng/Desktop/bloodbridge/src/main/resources/application.properties) and [`application-dev.properties`](file:///home/ghanapayeng/Desktop/bloodbridge/src/main/resources/application-dev.properties).
 
 2. **Database Profiles & Cloud Deployment**:
-   - **Production (Render + TiDB)**: Hosted on **Render** connecting to **TiDB Cloud** via MySQL dialect:
+   - **Production (Cloud + TiDB)**: Connecting to **TiDB Cloud** via MySQL dialect:
      - URL format: `jdbc:mysql://${DB_HOST}:${DB_PORT:4000}/${DB_NAME}?useSSL=true&sslMode=VERIFY_IDENTITY`
      - Uses standard MySQL connector `com.mysql.cj.jdbc.Driver` and `org.hibernate.dialect.MySQLDialect`.
-     - In Render dashboard, environment variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, and `SPRING_PROFILES_ACTIVE=local` are configured.
+     - In container deployment, environment variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, and `SPRING_PROFILES_ACTIVE=local` are configured.
    - **Local Development**: Live MySQL (`jdbc:mysql://localhost:3306/blood_bridge`) or custom `.env`.
    - **Testing / In-Memory**: H2 in-memory (`jdbc:h2:mem:bloodbridgedb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE`).
 

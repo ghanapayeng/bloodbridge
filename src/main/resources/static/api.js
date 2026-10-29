@@ -1,6 +1,32 @@
+function getApiBaseUrl() {
+    if (typeof window !== "undefined") {
+        if (window.BLOODBRIDGE_API_BASE) {
+            return String(window.BLOODBRIDGE_API_BASE).replace(/\/$/, "");
+        }
+        const customUrl = localStorage.getItem("bloodbridge_backend_url");
+        if (customUrl) {
+            return customUrl.replace(/\/$/, "");
+        }
+    }
+    return "";
+}
+
+function buildApiUrl(url) {
+    if (!url) return "";
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+        return url;
+    }
+    const base = getApiBaseUrl();
+    const cleanUrl = url.startsWith("/") ? url : "/" + url;
+    return base ? base + cleanUrl : cleanUrl;
+}
+
 if (typeof window !== "undefined") {
     window.addEventListener("DOMContentLoaded", () => {
-        if (window.location.port === "5500" || window.location.port === "5501" || window.location.protocol === "file:") {
+        const isLiveServer = window.location.port === "5500" || window.location.port === "5501" || window.location.protocol === "file:";
+        const isVercelOrProd = window.location.hostname.includes("vercel.app") || (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1");
+        
+        if (isLiveServer && !isVercelOrProd && !getApiBaseUrl()) {
             if (document.getElementById("backend-warning-banner")) return;
             const banner = document.createElement("div");
             banner.id = "backend-warning-banner";
@@ -17,8 +43,8 @@ let _cachedCsrf = null;
 
 async function getCsrfToken() {
     try {
-        const response = await fetch("/api/auth/csrf", {
-            credentials: "same-origin"
+        const response = await fetch(buildApiUrl("/api/auth/csrf"), {
+            credentials: "include"
         });
         if (response.ok) {
             _cachedCsrf = await response.json();
@@ -52,10 +78,33 @@ async function apiFetch(url, options = {}) {
         ...options,
         method: method,
         headers: headers,
-        credentials: "same-origin"
+        credentials: "include"
     };
 
-    const response = await fetch(url, config);
+    const targetUrl = buildApiUrl(url);
+
+    // Warm-up / cold-start indicator for initial cloud wake-ups
+    let slowTimer = null;
+    let wakeBanner = null;
+    if (typeof window !== "undefined") {
+        slowTimer = setTimeout(() => {
+            wakeBanner = document.createElement("div");
+            wakeBanner.id = "cloud-wakeup-toast";
+            wakeBanner.style.cssText = "position:fixed;bottom:20px;left:20px;background:#1e293b;color:#f8fafc;padding:10px 16px;border-radius:8px;font-size:13px;z-index:99999;box-shadow:0 4px 12px rgba(0,0,0,0.3);display:flex;align-items:center;gap:8px;";
+            wakeBanner.innerHTML = `<span style="display:inline-block;animation:spin 1s linear infinite;">⏳</span> <span>Connecting to cloud service (instances may take a moment to wake up)...</span>`;
+            document.body.appendChild(wakeBanner);
+        }, 3500);
+    }
+
+    let response;
+    try {
+        response = await fetch(targetUrl, config);
+    } finally {
+        if (slowTimer) clearTimeout(slowTimer);
+        if (wakeBanner && wakeBanner.parentNode) {
+            wakeBanner.remove();
+        }
+    }
 
     if (response.status === 401 && options.redirectOnUnauthorized !== false) {
         window.location.replace("login.html");
@@ -238,3 +287,14 @@ function showToast(message, type = "success") {
         setTimeout(() => toast.remove(), 300);
     }, 4000);
 }
+
+if (typeof window !== "undefined") {
+    window.apiFetch = apiFetch;
+    window.getCsrfToken = getCsrfToken;
+    window.buildApiUrl = buildApiUrl;
+    window.getApiBaseUrl = getApiBaseUrl;
+    window.showToast = showToast;
+    window.getCurrentUser = getCurrentUser;
+    window.logout = logout;
+}
+

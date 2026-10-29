@@ -67,11 +67,11 @@ This document outlines the complete chronological progression of commits and cod
 ---
 
 ### 4. Production Hosting & Cloud Database Milestone
-- **Hosting Platform**: Render ([https://bloodbridge-wzdp.onrender.com](https://bloodbridge-wzdp.onrender.com))
+- **Hosting Platform**: Cloud Container Deployment & Vercel Edge
 - **Database Engine**: TiDB Cloud (Serverless / Dedicated distributed MySQL-compatible engine)
 - **Deployment Details**:
   - Containerized build triggered via Dockerfile.
-  - Port 8080 exposed and routed through Render's reverse proxy with automatic SSL/TLS termination.
+  - Port 8080 exposed and routed with automatic SSL/TLS termination.
   - TiDB connection configured via environment variables with encrypted connection string.
 
 ---

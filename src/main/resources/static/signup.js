@@ -36,9 +36,11 @@ function setupOtpHandlers() {
             sendEmailOtpBtn.textContent = "Sending...";
 
             try {
-                const res = await fetch("/api/auth/otp/send", {
+                const sendUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/auth/otp/send") : "/api/auth/otp/send";
+                const res = await fetch(sendUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
+                    credentials: "include",
                     body: JSON.stringify({ identifier: email, type: "EMAIL" })
                 });
 
@@ -78,9 +80,11 @@ function setupOtpHandlers() {
             verifyEmailOtpBtn.textContent = "...";
 
             try {
-                const res = await fetch("/api/auth/otp/verify", {
+                const verifyUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/auth/otp/verify") : "/api/auth/otp/verify";
+                const res = await fetch(verifyUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
+                    credentials: "include",
                     body: JSON.stringify({ identifier: email, type: "EMAIL", code: code })
                 });
                 const data = await res.json();
@@ -126,9 +130,11 @@ function setupOtpHandlers() {
             sendPhoneOtpBtn.textContent = "Sending...";
 
             try {
-                const res = await fetch("/api/auth/otp/send", {
+                const sendUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/auth/otp/send") : "/api/auth/otp/send";
+                const res = await fetch(sendUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
+                    credentials: "include",
                     body: JSON.stringify({ identifier: phone, type: "PHONE" })
                 });
 
@@ -168,9 +174,11 @@ function setupOtpHandlers() {
             verifyPhoneOtpBtn.textContent = "...";
 
             try {
-                const res = await fetch("/api/auth/otp/verify", {
+                const verifyUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/auth/otp/verify") : "/api/auth/otp/verify";
+                const res = await fetch(verifyUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
+                    credentials: "include",
                     body: JSON.stringify({ identifier: phone, type: "PHONE", code: code })
                 });
                 const data = await res.json();
@@ -265,12 +273,13 @@ if (signupForm) {
                 phoneOtp: phoneOtp || null
             };
 
-            const registerResponse = await fetch("/api/auth/register", {
+            const regUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/auth/register") : "/api/auth/register";
+            const registerResponse = await fetch(regUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                credentials: "same-origin",
+                credentials: "include",
                 body: JSON.stringify(registerPayload)
             });
 
@@ -283,12 +292,13 @@ if (signupForm) {
             }
 
             // 2. Automatically Log in
-            const loginResponse = await fetch("/api/auth/login", {
+            const loginUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/auth/login") : "/api/auth/login";
+            const loginResponse = await fetch(loginUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                credentials: "same-origin",
+                credentials: "include",
                 body: JSON.stringify({ email: email, password: password })
             });
 

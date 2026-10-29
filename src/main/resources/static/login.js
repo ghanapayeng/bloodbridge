@@ -1,5 +1,5 @@
 // ===============================================
-// BLOODBRIDGE LOGIN (PASSWORD & TWILIO EMAIL OTP)
+// BLOODBRIDGE LOGIN (PASSWORD & EMAIL OTP)
 // ===============================================
 
 const loginForm = document.getElementById("loginForm");
@@ -93,12 +93,13 @@ if (loginForm) {
         }
 
         try {
-            const response = await fetch("/api/auth/login", {
+            const loginUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/auth/login") : "/api/auth/login";
+            const response = await fetch(loginUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                credentials: "same-origin",
+                credentials: "include",
                 body: JSON.stringify({ email: email, password: password })
             });
 
@@ -106,7 +107,7 @@ if (loginForm) {
 
             if (!response.ok) {
                 if (response.status === 404 || response.status === 405) {
-                    showToast("Backend not found on port " + (window.location.port || "default") + ". Please open http://localhost:8080/login.html", "error");
+                    showToast("Backend service not reachable. Please check your network or backend connection.", "error");
                 } else {
                     showToast(body.message || "Invalid email or password.", "error");
                 }
@@ -120,8 +121,8 @@ if (loginForm) {
 
         } catch (error) {
             console.error("Login failed:", error);
-            if (window.location.port && window.location.port !== "8080") {
-                showToast("Backend unreachable on port " + window.location.port + ". Please open http://localhost:8080/login.html", "error");
+            if (window.location.port === "5500" || window.location.port === "5501") {
+                showToast("Backend unreachable on Live Server port " + window.location.port + ". Please open http://localhost:8080/login.html", "error");
             } else {
                 showToast("Unable to sign in right now. Please try again.", "error");
             }
@@ -135,7 +136,7 @@ if (loginForm) {
 }
 
 // -----------------------------------------------
-// TWILIO EMAIL OTP LOGIN
+// EMAIL OTP LOGIN
 // -----------------------------------------------
 function setupOtpLogin() {
     async function handleSendOtp() {
@@ -153,9 +154,11 @@ function setupOtpLogin() {
         }
 
         try {
-            const res = await fetch("/api/auth/otp/send", {
+            const sendUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/auth/otp/send") : "/api/auth/otp/send";
+            const res = await fetch(sendUrl, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({ identifier: email, type: "EMAIL" })
             });
 
@@ -223,10 +226,11 @@ function setupOtpLogin() {
             }
 
             try {
-                const response = await fetch("/api/auth/login/otp", {
+                const otpVerifyUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/auth/login/otp") : "/api/auth/login/otp";
+                const response = await fetch(otpVerifyUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    credentials: "same-origin",
+                    credentials: "include",
                     body: JSON.stringify({ email: email, code: code })
                 });
 
