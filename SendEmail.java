@@ -11,11 +11,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Standalone test utility for verifying Twilio Comms Email API connectivity.
- * Uses HTTP Basic Authentication with TWILIO_API_KEY_SID (or TWILIO_ACCOUNT_SID)
- * and TWILIO_API_KEY_SECRET (or TWILIO_AUTH_TOKEN) against https://comms.twilio.com/v1/Emails.
- */
 public class SendEmail {
 
     public static void main(String[] args) throws Exception {

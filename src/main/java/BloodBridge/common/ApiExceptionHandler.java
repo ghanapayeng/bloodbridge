@@ -16,6 +16,8 @@ import org.springframework.web.server.ResponseStatusException;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ApiExceptionHandler.class);
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException exception) {
         Map<String, String> fields = new LinkedHashMap<>();
@@ -35,6 +37,8 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<ApiError> handleConflict(DataIntegrityViolationException exception) {
+        String cause = exception.getMostSpecificCause() != null ? exception.getMostSpecificCause().getMessage() : exception.getMessage();
+        log.warn("[DATABASE CONFLICT] Data integrity violation: {}", cause);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(new ApiError(
                 Instant.now(), HttpStatus.CONFLICT.value(), "Conflict", "The requested change conflicts with existing data.", Map.of()));
     }
