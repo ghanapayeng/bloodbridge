@@ -29,8 +29,8 @@ This guide details how BloodBridge is configured to deploy **all-on-Vercel** wit
                                               ┌─────────────────┴─────────────────┐
                                               │                                   │
                                               ▼                                   ▼
-                                   [ TiDB Cloud / MySQL ]                  [ Resend API ]
-                                   (Database via TLS)                      (Email OTP Delivery)
+                                   [ TiDB Cloud / MySQL ]                  [ Gmail SMTP ]
+                                   (Database via TLS)                      (JavaMailSender OTP Delivery)
 ```
 
 ### Key Architectural Highlights:
@@ -38,7 +38,7 @@ This guide details how BloodBridge is configured to deploy **all-on-Vercel** wit
 2. **Containerized Spring Boot Function**: The backend is packaged via `Dockerfile.vercel` using a multi-stage Eclipse Temurin 25 build, running as an unprivileged user (`bloodbridge`) and dynamically binding to the runtime port specified by `$PORT`.
 3. **No Node.js Backend Rewrite**: 100% of existing Java Spring Boot controllers, entities, repositories, Spring Security rules, CSRF verification, and database migrations are preserved intact.
 4. **No Production `localhost:8080` Dependency**: In production, requests to `/api/*` are routed directly to the containerized `backend` service. Any legacy proxy gateway explicitly rejects unconfigured calls with HTTP 502 rather than attempting invalid localhost connections.
-5. **Secure Credential Isolation**: Database credentials (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`) and the Resend API key (`RESEND_API_KEY`, `RESEND_FROM`) are stored in Vercel's encrypted Environment Variables and injected server-side only.
+5. **Secure Credential Isolation**: Database credentials (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`) and Gmail SMTP credentials (`GMAIL_USERNAME`, `GMAIL_APP_PASSWORD`) are stored in Vercel's encrypted Environment Variables and injected server-side only.
 
 ---
 
@@ -75,13 +75,13 @@ Before triggering the deployment build, set your secrets in the Vercel Dashboard
 | `DB_URL` | Production, Preview | `jdbc:mysql://gateway01.ap-northeast-1.prod.aws.tidbcloud.com:4000/blood_bridge?useSSL=true&sslMode=VERIFY_IDENTITY` | TiDB / MySQL JDBC connection string |
 | `DB_USERNAME` | Production, Preview | `your_user.root` | Database username |
 | `DB_PASSWORD` | Production, Preview | `your_secure_password` | Database password |
-| `RESEND_API_KEY` | Production, Preview | `re_123456789...` | API key from [Resend](https://resend.com/api-keys) |
-| `RESEND_FROM` | Production, Preview | `onboarding@resend.dev` (or verified domain) | Verified sender email |
+| `GMAIL_USERNAME` | Production, Preview | `your_email@gmail.com` | Gmail address for sending OTP emails |
+| `GMAIL_APP_PASSWORD` | Production, Preview | `abcd efgh ijkl mnop` (16 chars) | Google App Password with 2FA enabled |
 | `SPRING_PROFILES_ACTIVE` | Production, Preview | `local` | Spring active profile |
 | `JPA_SHOW_SQL` | Production, Preview | `false` | SQL query logging |
 
 > [!IMPORTANT]
-> Mark `DB_PASSWORD` and `RESEND_API_KEY` as **Secret** / encrypted in Vercel to protect them from exposure.
+> Mark `DB_PASSWORD` and `GMAIL_APP_PASSWORD` as **Secret** / encrypted in Vercel to protect them from exposure.
 
 ---
 
@@ -114,7 +114,8 @@ vercel link
 vercel env add DB_URL
 vercel env add DB_USERNAME
 vercel env add DB_PASSWORD
-vercel env add RESEND_API_KEY
+vercel env add GMAIL_USERNAME
+vercel env add GMAIL_APP_PASSWORD
 
 # 4. Deploy to production
 vercel --prod --non-interactive

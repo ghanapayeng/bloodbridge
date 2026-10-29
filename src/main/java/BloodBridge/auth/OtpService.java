@@ -16,7 +16,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 import java.util.Optional;
 
-import BloodBridge.notification.ResendEmailService;
+import BloodBridge.notification.EmailService;
 
 @Service
 public class OtpService {
@@ -27,12 +27,12 @@ public class OtpService {
     private static final int MAX_HOURLY_REQUESTS = 5;
 
     private final OtpVerificationRepository otpRepository;
-    private final ResendEmailService resendEmailService;
+    private final EmailService emailService;
     private final SecureRandom secureRandom = new SecureRandom();
 
-    public OtpService(OtpVerificationRepository otpRepository, ResendEmailService resendEmailService) {
+    public OtpService(OtpVerificationRepository otpRepository, EmailService emailService) {
         this.otpRepository = otpRepository;
-        this.resendEmailService = resendEmailService;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -68,9 +68,9 @@ public class OtpService {
         OtpVerification verification = new OtpVerification(identifier, hashedCode, type, expiresAt);
         otpRepository.save(verification);
 
-        // 5. Dispatch email via Resend API
+        // 5. Dispatch email via Gmail SMTP
         if ("EMAIL".equalsIgnoreCase(type)) {
-            resendEmailService.sendOtpEmail(identifier, code, 5);
+            emailService.sendOtpEmail(identifier, code, 5);
         }
 
         log.info("[OTP SERVICE] Verification code generated and dispatched for {} ({})", identifier, type);

@@ -12,7 +12,7 @@ import BloodBridge.auth.AuthDtos.RegisterRequest;
 import BloodBridge.auth.AuthDtos.SendOtpRequest;
 import BloodBridge.auth.AuthDtos.UserResponse;
 import BloodBridge.auth.AuthDtos.VerifyOtpRequest;
-import BloodBridge.notification.ResendEmailService;
+import BloodBridge.notification.EmailService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +26,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClient;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
@@ -47,8 +46,13 @@ class OtpAuthIntegrationTest {
 
         @Bean
         @Primary
-        public ResendEmailService testResendEmailService() {
-            return new ResendEmailService("mock_key_123", "testing@bloodbridge.org") {
+        public EmailService testEmailService() {
+            return new EmailService() {
+                @Override
+                public void sendOtpEmail(String recipientEmail, String otpCode) {
+                    sendOtpEmail(recipientEmail, otpCode, 5);
+                }
+
                 @Override
                 public void sendOtpEmail(String recipientEmail, String otpCode, int expiryMinutes) {
                     sentRecipients.add(recipientEmail);
@@ -206,7 +210,7 @@ class OtpAuthIntegrationTest {
         assertTrue(response.success());
         assertEquals("A verification code has been sent to your email.", response.message());
 
-        // Verify email was dispatched via Resend mock
+        // Verify email was dispatched via email service mock
         assertTrue(MockEmailTestConfig.sentRecipients.contains("safe@example.com"));
     }
 
