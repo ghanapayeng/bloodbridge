@@ -44,9 +44,9 @@ function setupOtpHandlers() {
                     body: JSON.stringify({ identifier: email, type: "EMAIL", purpose: "REGISTRATION" })
                 });
 
-                const data = await res.json();
+                const data = await res.json().catch(() => ({}));
                 if (!res.ok) {
-                    throw new Error(data.message || "Failed to send email OTP.");
+                    throw new Error(data.message || (res.status === 429 ? "Please wait before requesting another code." : "Failed to send email OTP."));
                 }
 
                 if (emailOtpGroup) emailOtpGroup.style.display = "block";
@@ -87,9 +87,9 @@ function setupOtpHandlers() {
                     credentials: "include",
                     body: JSON.stringify({ identifier: email, type: "EMAIL", code: code, purpose: "REGISTRATION" })
                 });
-                const data = await res.json();
+                const data = await res.json().catch(() => ({}));
                 if (!res.ok) {
-                    throw new Error(data.message || "Invalid email OTP.");
+                    throw new Error(data.message || (res.status === 400 ? "Invalid or expired verification code." : "Verification failed. Please try again."));
                 }
 
                 emailVerified = true;
@@ -138,9 +138,9 @@ function setupOtpHandlers() {
                     body: JSON.stringify({ identifier: phone, type: "PHONE", purpose: "REGISTRATION" })
                 });
 
-                const data = await res.json();
+                const data = await res.json().catch(() => ({}));
                 if (!res.ok) {
-                    throw new Error(data.message || "Failed to send phone OTP.");
+                    throw new Error(data.message || (res.status === 429 ? "Please wait before requesting another code." : "Failed to send phone OTP."));
                 }
 
                 if (phoneOtpGroup) phoneOtpGroup.style.display = "block";
@@ -181,9 +181,9 @@ function setupOtpHandlers() {
                     credentials: "include",
                     body: JSON.stringify({ identifier: phone, type: "PHONE", code: code, purpose: "REGISTRATION" })
                 });
-                const data = await res.json();
+                const data = await res.json().catch(() => ({}));
                 if (!res.ok) {
-                    throw new Error(data.message || "Invalid phone OTP.");
+                    throw new Error(data.message || (res.status === 400 ? "Invalid or expired verification code." : "Verification failed. Please try again."));
                 }
 
                 phoneVerified = true;

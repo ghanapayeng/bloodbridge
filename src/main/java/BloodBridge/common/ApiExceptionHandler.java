@@ -55,6 +55,14 @@ public class ApiExceptionHandler {
                 Instant.now(), HttpStatus.BAD_REQUEST.value(), "Bad Request", exception.getMessage(), Map.of()));
     }
 
+    @ExceptionHandler(Exception.class)
+    ResponseEntity<ApiError> handleGenericException(Exception exception) {
+        log.error("[INTERNAL ERROR] Unexpected error processing request", exception);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ApiError(
+                Instant.now(), HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error",
+                "An unexpected server error occurred. Please try again.", Map.of()));
+    }
+
     record ApiError(Instant timestamp, int status, String error, String message, Map<String, String> fieldErrors) {
     }
 }

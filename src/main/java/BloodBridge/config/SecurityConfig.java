@@ -92,7 +92,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/", "/*.html", "/**.css", "/**.js", "/favicon.ico").permitAll()
+                        .requestMatchers("/", "/*.html", "/**.css", "/**.js", "/favicon.ico", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/health", "/api/auth/csrf", "/api/donors/verify/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/login/**", "/api/auth/otp/**").permitAll()
                         .anyRequest().authenticated())

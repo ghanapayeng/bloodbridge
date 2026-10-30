@@ -162,9 +162,9 @@ function setupOtpLogin() {
                 body: JSON.stringify({ identifier: email, type: "EMAIL", purpose: "LOGIN" })
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) {
-                throw new Error(data.message || "Failed to send email verification code.");
+                throw new Error(data.message || (res.status === 429 ? "Please wait before requesting another code." : "Failed to send email verification code."));
             }
 
             if (loginOtpGroup) {

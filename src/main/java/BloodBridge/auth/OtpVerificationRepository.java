@@ -12,7 +12,6 @@ import java.util.Optional;
 
 public interface OtpVerificationRepository extends JpaRepository<OtpVerification, Long> {
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<OtpVerification> findFirstByIdentifierAndOtpTypeAndPurposeOrderByCreatedAtDesc(
             String identifier, String otpType, String purpose);
 
