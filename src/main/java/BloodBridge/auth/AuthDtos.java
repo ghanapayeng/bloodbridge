@@ -46,13 +46,23 @@ public final class AuthDtos {
 
     public record SendOtpRequest(
             @NotBlank @Size(max = 254) String identifier,
-            @NotBlank @Size(max = 32) String type) {
+            @NotBlank @Size(max = 32) String type,
+            @Size(max = 32) String purpose) {
+
+        public SendOtpRequest(String identifier, String type) {
+            this(identifier, type, OtpPurpose.REGISTRATION.name());
+        }
     }
 
     public record VerifyOtpRequest(
             @NotBlank @Size(max = 254) String identifier,
             @NotBlank @Size(max = 32) String type,
-            @NotBlank @Size(min = 6, max = 6) String code) {
+            @NotBlank @Size(min = 6, max = 6) String code,
+            @Size(max = 32) String purpose) {
+
+        public VerifyOtpRequest(String identifier, String type, String code) {
+            this(identifier, type, code, OtpPurpose.REGISTRATION.name());
+        }
     }
 
     public record OtpResponse(boolean success, String message) {

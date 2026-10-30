@@ -25,6 +25,9 @@ public class OtpVerification {
     @Column(name = "otp_type", nullable = false, length = 32)
     private String otpType;
 
+    @Column(name = "purpose", nullable = false, length = 32)
+    private String purpose;
+
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
@@ -40,18 +43,27 @@ public class OtpVerification {
     protected OtpVerification() {
     }
 
-    public OtpVerification(String identifier, String otpCode, String otpType, Instant expiresAt) {
-        this(identifier, otpCode, otpType, expiresAt, Instant.now());
+    public OtpVerification(String identifier, String otpCode, String otpType, String purpose, Instant expiresAt) {
+        this(identifier, otpCode, otpType, purpose, expiresAt, Instant.now());
     }
 
-    public OtpVerification(String identifier, String otpCode, String otpType, Instant expiresAt, Instant createdAt) {
+    public OtpVerification(String identifier, String otpCode, String otpType, String purpose, Instant expiresAt, Instant createdAt) {
         this.identifier = identifier;
         this.otpCode = otpCode;
         this.otpType = otpType;
+        this.purpose = OtpPurpose.normalize(purpose);
         this.expiresAt = expiresAt;
         this.verified = false;
         this.failedAttempts = 0;
         this.createdAt = createdAt != null ? createdAt : Instant.now();
+    }
+
+    public OtpVerification(String identifier, String otpCode, String otpType, Instant expiresAt) {
+        this(identifier, otpCode, otpType, OtpPurpose.REGISTRATION.name(), expiresAt, Instant.now());
+    }
+
+    public OtpVerification(String identifier, String otpCode, String otpType, Instant expiresAt, Instant createdAt) {
+        this(identifier, otpCode, otpType, OtpPurpose.REGISTRATION.name(), expiresAt, createdAt);
     }
 
     public Long getId() {
@@ -68,6 +80,14 @@ public class OtpVerification {
 
     public String getOtpType() {
         return otpType;
+    }
+
+    public String getPurpose() {
+        return purpose;
+    }
+
+    public void setPurpose(String purpose) {
+        this.purpose = OtpPurpose.normalize(purpose);
     }
 
     public Instant getExpiresAt() {

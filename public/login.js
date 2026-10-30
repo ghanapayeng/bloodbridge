@@ -159,7 +159,7 @@ function setupOtpLogin() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
-                body: JSON.stringify({ identifier: email, type: "EMAIL" })
+                body: JSON.stringify({ identifier: email, type: "EMAIL", purpose: "LOGIN" })
             });
 
             const data = await res.json();

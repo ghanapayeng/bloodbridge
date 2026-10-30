@@ -41,7 +41,7 @@ function setupOtpHandlers() {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include",
-                    body: JSON.stringify({ identifier: email, type: "EMAIL" })
+                    body: JSON.stringify({ identifier: email, type: "EMAIL", purpose: "REGISTRATION" })
                 });
 
                 const data = await res.json();
@@ -85,7 +85,7 @@ function setupOtpHandlers() {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include",
-                    body: JSON.stringify({ identifier: email, type: "EMAIL", code: code })
+                    body: JSON.stringify({ identifier: email, type: "EMAIL", code: code, purpose: "REGISTRATION" })
                 });
                 const data = await res.json();
                 if (!res.ok) {
@@ -135,7 +135,7 @@ function setupOtpHandlers() {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include",
-                    body: JSON.stringify({ identifier: phone, type: "PHONE" })
+                    body: JSON.stringify({ identifier: phone, type: "PHONE", purpose: "REGISTRATION" })
                 });
 
                 const data = await res.json();
@@ -179,7 +179,7 @@ function setupOtpHandlers() {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     credentials: "include",
-                    body: JSON.stringify({ identifier: phone, type: "PHONE", code: code })
+                    body: JSON.stringify({ identifier: phone, type: "PHONE", code: code, purpose: "REGISTRATION" })
                 });
                 const data = await res.json();
                 if (!res.ok) {
