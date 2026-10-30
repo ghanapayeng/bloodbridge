@@ -115,6 +115,9 @@ public class AuthController {
 
     @GetMapping("/csrf")
     public CsrfTokenResponse csrf(CsrfToken token) {
+        if (token == null) {
+            return new CsrfTokenResponse("X-XSRF-TOKEN", "_csrf", "");
+        }
         return new CsrfTokenResponse(token.getHeaderName(), token.getParameterName(), token.getToken());
     }
 
