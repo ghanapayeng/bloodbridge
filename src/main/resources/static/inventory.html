@@ -5,8 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blood Inventory & Expiry | BloodBridge</title>
     <link rel="stylesheet" href="dashboard.css">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        .demo-notice-bar {
+            background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 100%);
+            border: 1.5px solid #bfdbfe;
+            border-radius: 14px;
+            padding: 14px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.05);
+        }
+        .demo-tag {
+            background: #2563eb;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
         .inventory-table-card {
             background: #ffffff;
             border-radius: 16px;
@@ -46,6 +69,27 @@
         .status-reserved { background: #fef3c7; color: #b45309; }
         .status-issued { background: #f1f5f9; color: #475569; }
         .status-expired { background: #fee2e2; color: #b91c1c; }
+        .badge-comp {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+        }
+        .badge-demo-item {
+            display: inline-block;
+            background: #f3e8ff;
+            color: #7e22ce;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            text-transform: uppercase;
+        }
         .btn-action-sm {
             cursor: pointer;
             padding: 5px 12px;
@@ -60,6 +104,21 @@
         .btn-issue { background: #ecfdf5; color: #059669; border-color: #a7f3d0; }
         .btn-issue:hover { background: #d1fae5; }
         .expiring-alert-row { background: #fff5f5; }
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+        .comp-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
     </style>
 </head>
 <body>
@@ -85,6 +144,7 @@
 
             <p class="nav-title">HOSPITAL & INVENTORY</p>
             <a href="inventory.html" class="nav-link active"><span>📦</span> Blood Inventory</a>
+            <a href="dashboard.html#forecastSection" class="nav-link"><span>📈</span> Demand Forecast</a>
             <a href="transfers.html" class="nav-link"><span>⇄</span> Transfers</a>
         </nav>
 
@@ -96,20 +156,39 @@
     <!-- MAIN -->
     <main class="main">
         <header class="topbar">
-            <div style="font-size: 18px; font-weight: 700; color: #1e293b;">
-                📦 Blood Inventory & Expiry Management
+            <div>
+                <div style="font-size: 18px; font-weight: 800; color: #1e293b;">
+                    📦 Blood Inventory & Expiry Management
+                </div>
+                <small style="color: #64748b; font-size: 12px;">Real-time stock monitoring & component tracking</small>
             </div>
             <div class="topbar-right" style="display: flex; gap: 10px; align-items: center;">
-                <a href="/api/export/inventory/csv" download style="text-decoration: none; padding: 8px 14px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; font-size: 13px; color: #334155; display: inline-flex; align-items: center; gap: 4px;">
-                    📥 Export CSV
-                </a>
-                <button type="button" onclick="openAddBatchModal()" style="cursor: pointer; background: #dc2626; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 13px;">
-                    + Add Inventory Batch
+                <button type="button" onclick="openAddBatchModal()" style="cursor: pointer; background: #dc2626; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
+                    <span>＋</span> Add Inventory Batch
                 </button>
             </div>
         </header>
 
         <section class="dashboard">
+
+            <!-- DEMONSTRATION DATA NOTICE BANNER -->
+            <div class="demo-notice-bar">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 24px;">🔬</span>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <strong style="color: #1e40af; font-size: 14.5px;">ESTIMATED DEMONSTRATION INVENTORY</strong>
+                            <span class="demo-tag">Academic Demo</span>
+                        </div>
+                        <div style="color: #3b82f6; font-size: 12.5px; margin-top: 2px;">
+                            Synthetic hospital reserve values generated directly in MySQL for classroom demonstration. Real donor alerts and live emergency requests remain strictly isolated.
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 12px; color: #475569; font-weight: 600; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                    All 8 Blood Groups & 5 Components Covered
+                </div>
+            </div>
 
             <!-- SUMMARY CARDS -->
             <div class="summary-grid">
@@ -128,7 +207,7 @@
                         <span class="card-icon">🔒</span>
                     </div>
                     <div class="big-number" id="totalReservedCount">0</div>
-                    <p>Locked for open requests</p>
+                    <p>Locked for scheduled surgeries</p>
                 </div>
 
                 <div class="summary-card">
@@ -142,6 +221,15 @@
 
                 <div class="summary-card">
                     <div class="card-heading">
+                        <span>CRITICAL SHORTAGES</span>
+                        <span class="card-icon">🚨</span>
+                    </div>
+                    <div class="big-number" id="criticalShortageCount" style="color: #e11d48;">0</div>
+                    <p>Blood types under 3 units</p>
+                </div>
+
+                <div class="summary-card">
+                    <div class="card-heading">
                         <span>LOW STOCK ALERTS</span>
                         <span class="card-icon">⚠️</span>
                     </div>
@@ -150,11 +238,30 @@
                 </div>
             </div>
 
-            <!-- STOCK BREAKDOWN BY BLOOD TYPE -->
+            <!-- STOCK BREAKDOWN BY BLOOD TYPE (ALL 8 GROUPS) -->
             <div style="background: white; border-radius: 14px; border: 1px solid #e2e8f0; padding: 20px; margin-top: 24px;">
-                <h3 style="margin: 0 0 14px 0; font-size: 15px; color: #1e293b;">Blood Group Stock Overview</h3>
-                <div id="stockGroupsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 16px; color: #1e293b;">Blood Group Inventory Overview (All 8 Groups)</h3>
+                        <small style="color: #64748b;">Current stock levels vs minimum reserve thresholds</small>
+                    </div>
+                    <div style="display: flex; gap: 8px; font-size: 11px;">
+                        <span style="background: #fee2e2; color: #dc2626; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Critical (< 3)</span>
+                        <span style="background: #fef3c7; color: #b45309; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Low (< 5)</span>
+                        <span style="background: #dcfce7; color: #15803d; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Optimal (≥ 5)</span>
+                    </div>
+                </div>
+                <div id="stockGroupsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px;">
                     <div style="padding: 10px; text-align: center; color: #94a3b8;">Loading stock...</div>
+                </div>
+            </div>
+
+            <!-- COMPONENT-WISE STOCK BREAKDOWN -->
+            <div style="background: white; border-radius: 14px; border: 1px solid #e2e8f0; padding: 20px; margin-top: 24px;">
+                <h3 style="margin: 0 0 4px 0; font-size: 16px; color: #1e293b;">Component Availability & Shelf-Life Monitoring</h3>
+                <small style="color: #64748b;">Whole Blood, PRBC, FFP, Platelets & Cryoprecipitate</small>
+                <div id="componentsContainer" class="component-grid">
+                    <div style="padding: 10px; text-align: center; color: #94a3b8;">Loading component breakdown...</div>
                 </div>
             </div>
 
@@ -163,11 +270,11 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <div>
                         <h2 style="margin: 0; font-size: 18px; color: #1e293b;">Inventory Batches</h2>
-                        <small style="color: #64748b;">Real-time hospital and blood bank reserves</small>
+                        <small style="color: #64748b;">Hospital and regional blood center batches with component & expiry tracking</small>
                     </div>
 
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <select id="filterBloodGroup" onchange="loadInventoryData()" style="padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px;">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <select id="filterBloodGroup" onchange="loadInventoryData()" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px; font-weight: 500;">
                             <option value="">All Blood Groups</option>
                             <option value="A+">A+</option>
                             <option value="A-">A-</option>
@@ -179,7 +286,16 @@
                             <option value="O-">O-</option>
                         </select>
 
-                        <select id="filterStatus" onchange="loadInventoryData()" style="padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px;">
+                        <select id="filterComponent" onchange="loadInventoryData()" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px; font-weight: 500;">
+                            <option value="">All Components</option>
+                            <option value="PRBC">PRBC (Packed Red Cells)</option>
+                            <option value="WHOLE_BLOOD">Whole Blood</option>
+                            <option value="PLATELETS">Platelets (5-Day)</option>
+                            <option value="FFP">Fresh Frozen Plasma (FFP)</option>
+                            <option value="CRYOPRECIPITATE">Cryoprecipitate</option>
+                        </select>
+
+                        <select id="filterStatus" onchange="loadInventoryData()" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 13px; font-weight: 500;">
                             <option value="">All Statuses</option>
                             <option value="AVAILABLE" selected>Available</option>
                             <option value="RESERVED">Reserved</option>
@@ -193,8 +309,9 @@
                     <table class="inv-table">
                         <thead>
                             <tr>
-                                <th>Batch ID</th>
+                                <th>Batch Unit ID</th>
                                 <th>Blood Group</th>
+                                <th>Component</th>
                                 <th>Quantity</th>
                                 <th>Facility</th>
                                 <th>Collection Date</th>
@@ -205,7 +322,7 @@
                         </thead>
                         <tbody id="inventoryTableBody">
                             <tr>
-                                <td colspan="8" style="text-align: center; color: #94a3b8; padding: 30px;">Loading inventory batches...</td>
+                                <td colspan="9" style="text-align: center; color: #94a3b8; padding: 30px;">Loading inventory batches...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -218,25 +335,37 @@
 
 <!-- ADD BATCH MODAL -->
 <div class="modal-overlay" id="addBatchModal" style="display: none;">
-    <div style="background: white; border-radius: 16px; padding: 28px; width: 480px; max-width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
+    <div style="background: white; border-radius: 16px; padding: 28px; width: 500px; max-width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h3 style="margin: 0; font-size: 18px; color: #1e293b;">+ Add Blood Inventory Batch</h3>
             <button onclick="closeAddBatchModal()" style="border: none; background: transparent; font-size: 18px; cursor: pointer;">✕</button>
         </div>
 
         <form id="addBatchForm" onsubmit="submitNewBatch(event)">
-            <div style="margin-bottom: 14px;">
-                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Blood Group</label>
-                <select id="newBatchBg" required style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+" selected>B+</option>
-                    <option value="B-">B-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                </select>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Blood Group</label>
+                    <select id="newBatchBg" required style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <option value="A+">A+</option>
+                        <option value="A-">A-</option>
+                        <option value="B+" selected>B+</option>
+                        <option value="B-">B-</option>
+                        <option value="AB+">AB+</option>
+                        <option value="AB-">AB-</option>
+                        <option value="O+">O+</option>
+                        <option value="O-">O-</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px;">Component</label>
+                    <select id="newBatchComp" required style="width: 100%; padding: 9px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <option value="PRBC" selected>PRBC (Packed Red Cells)</option>
+                        <option value="WHOLE_BLOOD">Whole Blood</option>
+                        <option value="PLATELETS">Platelets (5-Day)</option>
+                        <option value="FFP">Fresh Frozen Plasma</option>
+                        <option value="CRYOPRECIPITATE">Cryoprecipitate</option>
+                    </select>
+                </div>
             </div>
 
             <div style="margin-bottom: 14px;">

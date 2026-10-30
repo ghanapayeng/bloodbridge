@@ -3,6 +3,7 @@ package BloodBridge.inventory;
 import BloodBridge.audit.AuditLogService;
 import BloodBridge.auth.UserAccount;
 import BloodBridge.auth.UserAccountRepository;
+import BloodBridge.common.BloodComponent;
 import BloodBridge.common.BloodGroup;
 import BloodBridge.inventory.BloodInventoryDtos.*;
 import BloodBridge.notification.AppNotification;
@@ -31,6 +32,9 @@ public class BloodInventoryService {
     @Value("${bloodbridge.inventory.low-stock-threshold:5}")
     private int lowStockThreshold;
 
+    @Value("${bloodbridge.inventory.critical-stock-threshold:3}")
+    private int criticalStockThreshold;
+
     public BloodInventoryService(
             BloodInventoryRepository inventoryRepository,
             AuditLogService auditLogService,
@@ -58,15 +62,20 @@ public class BloodInventoryService {
             rhType = request.bloodGroup().name().contains("POSITIVE") ? "+" : "-";
         }
 
+        BloodComponent component = request.component() != null ? request.component() : BloodComponent.WHOLE_BLOOD;
+        boolean isDemo = Boolean.TRUE.equals(request.isDemo());
+
         BloodInventory item = new BloodInventory(
                 request.bloodGroup(),
                 rhType,
+                component,
                 request.quantity(),
                 request.collectionDate(),
                 request.expiryDate(),
                 batchId,
                 request.facilityName(),
-                InventoryStatus.AVAILABLE
+                InventoryStatus.AVAILABLE,
+                isDemo
         );
 
         BloodInventory saved = inventoryRepository.save(item);
@@ -77,7 +86,7 @@ public class BloodInventoryService {
                 "BloodInventory",
                 saved.getId(),
                 "SUCCESS",
-                "Added " + saved.getQuantity() + " units of " + saved.getBloodGroup() + " to " + saved.getFacilityName()
+                "Added " + saved.getQuantity() + " units of " + saved.getBloodGroup() + " (" + component.getDisplayName() + ") to " + saved.getFacilityName()
         );
 
         return InventoryResponse.fromEntity(saved);
@@ -85,6 +94,11 @@ public class BloodInventoryService {
 
     @Transactional(readOnly = true)
     public List<InventoryResponse> getInventory(String facilityName, InventoryStatus status, BloodGroup bloodGroup) {
+        return getInventory(facilityName, status, bloodGroup, null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<InventoryResponse> getInventory(String facilityName, InventoryStatus status, BloodGroup bloodGroup, BloodComponent component) {
         List<BloodInventory> list;
         if (facilityName != null && !facilityName.isBlank()) {
             if (status != null) {
@@ -100,6 +114,10 @@ public class BloodInventoryService {
 
         if (bloodGroup != null) {
             list = list.stream().filter(i -> i.getBloodGroup() == bloodGroup).toList();
+        }
+
+        if (component != null) {
+            list = list.stream().filter(i -> i.getComponent() == component).toList();
         }
 
         return list.stream().map(InventoryResponse::fromEntity).toList();
@@ -123,19 +141,20 @@ public class BloodInventoryService {
             item.setStatus(InventoryStatus.RESERVED);
             inventoryRepository.save(item);
         } else {
-            // Split batch
             item.setQuantity(item.getQuantity() - quantityToReserve);
             inventoryRepository.save(item);
 
             BloodInventory reservedBatch = new BloodInventory(
                     item.getBloodGroup(),
                     item.getRhType(),
+                    item.getComponent(),
                     quantityToReserve,
                     item.getCollectionDate(),
                     item.getExpiryDate(),
                     item.getBatchUnitId() + "-RES",
                     item.getFacilityName(),
-                    InventoryStatus.RESERVED
+                    InventoryStatus.RESERVED,
+                    item.isDemo()
             );
             inventoryRepository.save(reservedBatch);
         }
@@ -175,12 +194,14 @@ public class BloodInventoryService {
             BloodInventory transfusedBatch = new BloodInventory(
                     item.getBloodGroup(),
                     item.getRhType(),
+                    item.getComponent(),
                     quantityToIssue,
                     item.getCollectionDate(),
                     item.getExpiryDate(),
                     item.getBatchUnitId() + "-TRF",
                     item.getFacilityName(),
-                    InventoryStatus.ISSUED
+                    InventoryStatus.ISSUED,
+                    item.isDemo()
             );
             inventoryRepository.save(transfusedBatch);
         }
@@ -204,24 +225,40 @@ public class BloodInventoryService {
                 InventoryStatus.AVAILABLE, sevenDaysFromNow
         );
 
+        List<BloodInventory> allAvailable = inventoryRepository.findByStatus(InventoryStatus.AVAILABLE);
+
         Map<BloodGroup, Long> stockMap = new EnumMap<>(BloodGroup.class);
+        Map<BloodGroup, Map<String, Integer>> breakdownMap = new EnumMap<>(BloodGroup.class);
         for (BloodGroup bg : BloodGroup.values()) {
             stockMap.put(bg, 0L);
+            breakdownMap.put(bg, new LinkedHashMap<>());
         }
 
-        List<Object[]> rows = inventoryRepository.sumAvailableQuantityByBloodGroup();
-        for (Object[] row : rows) {
-            BloodGroup bg = (BloodGroup) row[0];
-            Long total = ((Number) row[1]).longValue();
-            stockMap.put(bg, total);
+        for (BloodInventory item : allAvailable) {
+            BloodGroup bg = item.getBloodGroup();
+            stockMap.put(bg, stockMap.getOrDefault(bg, 0L) + item.getQuantity());
+
+            String compCode = item.getComponent() != null ? item.getComponent().getCode() : "WB";
+            Map<String, Integer> compMap = breakdownMap.get(bg);
+            compMap.put(compCode, compMap.getOrDefault(compCode, 0) + item.getQuantity());
         }
 
         List<BloodGroupStockDto> stockSummary = new ArrayList<>();
         int totalAvailable = 0;
         for (Map.Entry<BloodGroup, Long> entry : stockMap.entrySet()) {
-            boolean isLow = entry.getValue() < lowStockThreshold;
-            stockSummary.add(new BloodGroupStockDto(entry.getKey(), entry.getValue(), isLow));
-            totalAvailable += entry.getValue();
+            BloodGroup bg = entry.getKey();
+            long qty = entry.getValue();
+            boolean isLow = qty < lowStockThreshold;
+            boolean isCritical = qty < criticalStockThreshold;
+            stockSummary.add(new BloodGroupStockDto(
+                    bg,
+                    bg.getDisplay(),
+                    qty,
+                    isLow,
+                    isCritical,
+                    breakdownMap.get(bg)
+            ));
+            totalAvailable += qty;
         }
 
         List<BloodInventory> reservedItems = inventoryRepository.findByStatus(InventoryStatus.RESERVED);
@@ -238,8 +275,57 @@ public class BloodInventoryService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public InventorySummaryResponse getInventorySummary() {
+        InventoryAlertsResponse alerts = getInventoryAlerts();
+
+        List<BloodInventory> allIssued = inventoryRepository.findByStatus(InventoryStatus.ISSUED);
+        int totalIssued = allIssued.stream().mapToInt(BloodInventory::getQuantity).sum();
+
+        Map<BloodComponent, Long> componentMap = new EnumMap<>(BloodComponent.class);
+        for (BloodComponent c : BloodComponent.values()) {
+            componentMap.put(c, 0L);
+        }
+
+        List<BloodInventory> available = inventoryRepository.findByStatus(InventoryStatus.AVAILABLE);
+        for (BloodInventory item : available) {
+            BloodComponent c = item.getComponent() != null ? item.getComponent() : BloodComponent.WHOLE_BLOOD;
+            componentMap.put(c, componentMap.getOrDefault(c, 0L) + item.getQuantity());
+        }
+
+        List<ComponentStockDto> componentList = new ArrayList<>();
+        for (Map.Entry<BloodComponent, Long> entry : componentMap.entrySet()) {
+            BloodComponent comp = entry.getKey();
+            componentList.add(new ComponentStockDto(
+                    comp,
+                    comp.getDisplayName(),
+                    comp.getCode(),
+                    entry.getValue(),
+                    comp.getShelfLifeDays()
+            ));
+        }
+
+        int lowStockCount = (int) alerts.stockSummary().stream().filter(BloodGroupStockDto::isLowStock).count();
+        int criticalCount = (int) alerts.stockSummary().stream().filter(BloodGroupStockDto::isCriticalShortage).count();
+        boolean hasDemoData = inventoryRepository.countByIsDemoTrue() > 0;
+
+        return new InventorySummaryResponse(
+                alerts.totalAvailableUnits(),
+                alerts.totalReservedUnits(),
+                totalIssued,
+                alerts.expiringUnitsCount(),
+                lowStockCount,
+                criticalCount,
+                alerts.stockSummary(),
+                componentList,
+                hasDemoData,
+                hasDemoData ? "ESTIMATED DEMONSTRATION INVENTORY (ACADEMIC USE ONLY)" : "REAL OPERATIONAL INVENTORY"
+        );
+    }
+
     /**
-     * Daily background job to mark expired units and alert staff for units expiring in <= 3 days.
+     * Daily background job to mark expired units and alert staff for genuine units expiring in <= 3 days.
+     * Demonstration units are safely excluded from generating real staff alerts.
      */
     @Scheduled(cron = "${bloodbridge.inventory.expiry-check-cron:0 0 1 * * *}")
     @Transactional
@@ -256,9 +342,13 @@ public class BloodInventoryService {
             }
         }
 
-        // 2. Alert hospital coordinators for units expiring soon (<= 3 days)
+        // 2. Alert hospital coordinators for genuine physical units expiring soon (<= 3 days)
         LocalDate threeDaysOut = today.plusDays(3);
-        List<BloodInventory> criticalExpiry = inventoryRepository.findApproachingOrExpired(InventoryStatus.AVAILABLE, threeDaysOut);
+        List<BloodInventory> criticalExpiry = inventoryRepository.findApproachingOrExpired(InventoryStatus.AVAILABLE, threeDaysOut)
+                .stream()
+                .filter(b -> !b.isDemo())
+                .toList();
+
         if (!criticalExpiry.isEmpty()) {
             List<UserAccount> hospitals = userAccountRepository.findByRole("ROLE_HOSPITAL");
             for (UserAccount hospital : hospitals) {
@@ -266,7 +356,7 @@ public class BloodInventoryService {
                         hospital,
                         NotificationType.EXPIRY_WARNING,
                         "Blood Units Expiring Soon Alert",
-                        criticalExpiry.size() + " blood batches are expiring within 3 days. Please prioritize utilization or transfer.",
+                        criticalExpiry.size() + " genuine blood batches are expiring within 3 days. Please prioritize utilization or transfer.",
                         null
                 ));
             }

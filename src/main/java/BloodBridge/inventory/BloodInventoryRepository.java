@@ -1,5 +1,6 @@
 package BloodBridge.inventory;
 
+import BloodBridge.common.BloodComponent;
 import BloodBridge.common.BloodGroup;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -27,4 +28,11 @@ public interface BloodInventoryRepository extends JpaRepository<BloodInventory, 
 
     @Query("SELECT b.bloodGroup, SUM(b.quantity) FROM BloodInventory b WHERE b.status = 'AVAILABLE' GROUP BY b.bloodGroup")
     List<Object[]> sumAvailableQuantityByBloodGroup();
+
+    @Query("SELECT b.component, SUM(b.quantity) FROM BloodInventory b WHERE b.status = 'AVAILABLE' GROUP BY b.component")
+    List<Object[]> sumAvailableQuantityByComponent();
+
+    long countByIsDemoTrue();
+
+    List<BloodInventory> findByIsDemoTrue();
 }

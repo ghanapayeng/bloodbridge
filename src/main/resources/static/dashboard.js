@@ -22,14 +22,15 @@ document.addEventListener("DOMContentLoaded", async function () {
     setupChatListeners();
     startCallSignalListener();
 
-    // 4. Load stats, requests, emergencies, notifications, and activity
+    // 4. Load stats, requests, emergencies, notifications, activity, and forecast
     await Promise.all([
         loadDashboardStats(),
         loadEmergencyBanner(),
         loadNotificationsBadge(),
         loadOpenRequests(),
         loadMyRequests(),
-        loadRecentActivity()
+        loadRecentActivity(),
+        loadForecastDashboard()
     ]);
 });
 
@@ -1601,3 +1602,539 @@ async function reviewFlaggedRequest(requestId, approved) {
         showToast(e.message || "Failed to submit risk review.", "error");
     }
 }
+
+// ========================================================
+// BLOOD DEMAND FORECASTING & PREDICTIVE ANALYTICS MODULE
+// ========================================================
+
+let currentForecastSummary = null;
+let currentBloodGroupForecasts = [];
+let currentComponentForecasts = [];
+let currentMonthlyTrends = [];
+let currentShortages = [];
+let selectedForecastHorizon = 30;
+
+function scrollToForecastSection() {
+    const el = document.getElementById("forecastSection");
+    if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+}
+
+async function loadForecastDashboard() {
+    const section = document.getElementById("forecastSection");
+    if (!section) return;
+
+    try {
+        const [summary, trends, groups, components, shortages] = await Promise.all([
+            apiFetch("/api/v1/forecast/summary", { redirectOnUnauthorized: false }).catch(() => null),
+            apiFetch("/api/v1/forecast/demand", { redirectOnUnauthorized: false }).catch(() => []),
+            apiFetch("/api/v1/forecast/blood-groups", { redirectOnUnauthorized: false }).catch(() => []),
+            apiFetch("/api/v1/forecast/components", { redirectOnUnauthorized: false }).catch(() => []),
+            apiFetch("/api/v1/forecast/shortages", { redirectOnUnauthorized: false }).catch(() => [])
+        ]);
+
+        currentForecastSummary = summary;
+        currentMonthlyTrends = trends || [];
+        currentBloodGroupForecasts = groups || [];
+        currentComponentForecasts = components || [];
+        currentShortages = shortages || [];
+
+        // 1. Update KPI Stat Cards
+        if (summary) {
+            updateForecastKpis(summary, selectedForecastHorizon);
+        }
+
+        // 2. Render Monthly Demand Line Chart
+        if (currentMonthlyTrends.length > 0) {
+            renderMonthlyDemandChart(currentMonthlyTrends);
+        }
+
+        // 3. Render Component Doughnut Chart & Cards
+        if (currentComponentForecasts.length > 0) {
+            renderComponentChart(currentComponentForecasts);
+            renderComponentCards(currentComponentForecasts);
+        }
+
+        // 4. Render Blood Group Comparison Chart & Detailed Table
+        if (currentBloodGroupForecasts.length > 0) {
+            renderBloodGroupChart(currentBloodGroupForecasts, selectedForecastHorizon);
+            renderBloodGroupsTable(currentBloodGroupForecasts, selectedForecastHorizon);
+        }
+
+        // 5. Render Shortage Alerts
+        renderShortages(currentShortages);
+
+    } catch (err) {
+        console.error("Failed to load forecast dashboard:", err);
+    }
+}
+
+function selectForecastHorizon(days) {
+    selectedForecastHorizon = days;
+
+    [7, 30, 90].forEach(d => {
+        const tab = document.getElementById(`horizonTab${d}`);
+        if (tab) {
+            if (d === days) {
+                tab.style.background = "#ffffff";
+                tab.style.color = "#0f172a";
+                tab.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
+            } else {
+                tab.style.background = "transparent";
+                tab.style.color = "#64748b";
+                tab.style.boxShadow = "none";
+            }
+        }
+    });
+
+    const horizonLabel = document.getElementById("currentHorizonLabel");
+    if (horizonLabel) {
+        horizonLabel.textContent = `${days}-Day Window`;
+    }
+
+    if (currentForecastSummary) {
+        updateForecastKpis(currentForecastSummary, days);
+    }
+
+    if (currentBloodGroupForecasts && currentBloodGroupForecasts.length > 0) {
+        renderBloodGroupChart(currentBloodGroupForecasts, days);
+        renderBloodGroupsTable(currentBloodGroupForecasts, days);
+    }
+}
+
+function updateForecastKpis(summary, horizonDays) {
+    const invEl = document.getElementById("forecastTotalInventoryCard");
+    const projEl = document.getElementById("forecastProjectedDemandCard");
+    const ratioEl = document.getElementById("forecastCoverageRatioCard");
+    const highestGrpEl = document.getElementById("forecastHighestGroupCard");
+    const highestCompEl = document.getElementById("forecastHighestComponentCard");
+    const shortagesEl = document.getElementById("forecastShortagesCountCard");
+    const horizonSubtext = document.getElementById("forecastHorizonSubtext");
+    const netBalanceSubtext = document.getElementById("forecastNetBalanceSubtext");
+
+    const totalInv = summary.totalCurrentInventoryUnits ?? summary.totalCurrentInventory ?? 0;
+    if (invEl) invEl.textContent = `${totalInv} Units`;
+
+    let projected = summary.forecast30DayDemandUnits ?? summary.projectedDemand30Days ?? 0;
+    if (horizonDays === 7) projected = summary.forecast7DayDemandUnits ?? summary.projectedDemand7Days ?? 0;
+    else if (horizonDays === 90) projected = summary.forecast90DayDemandUnits ?? summary.projectedDemand90Days ?? 0;
+
+    if (projEl) projEl.textContent = `${projected} Units`;
+    if (horizonSubtext) horizonSubtext.textContent = `Projected for ${horizonDays}-day horizon`;
+
+    const netBalance = totalInv - projected;
+    const ratio = projected > 0 ? (totalInv / projected).toFixed(2) : "1.00";
+
+    if (ratioEl) {
+        ratioEl.textContent = `${ratio}x Ratio`;
+        ratioEl.style.color = netBalance < 0 ? "#dc2626" : (netBalance < 15 ? "#d97706" : "#059669");
+    }
+
+    if (netBalanceSubtext) {
+        const sign = netBalance >= 0 ? "+" : "";
+        netBalanceSubtext.innerHTML = `Net reserve: <strong style="color:${netBalance < 0 ? '#dc2626' : '#059669'}">${sign}${netBalance} units</strong>`;
+    }
+
+    if (highestGrpEl) {
+        const grp = summary.highestDemandBloodGroupDisplay || summary.highestDemandBloodGroup || "B+";
+        highestGrpEl.textContent = grp;
+        const sub = highestGrpEl.nextElementSibling;
+        if (sub) sub.textContent = `~33% Demographic Velocity`;
+    }
+
+    if (highestCompEl) {
+        const comp = summary.highestDemandComponent || "PRBC";
+        highestCompEl.textContent = comp;
+        const sub = highestCompEl.nextElementSibling;
+        if (sub) sub.textContent = `Acute Trauma Transfusion`;
+    }
+
+    if (shortagesEl) {
+        const count = summary.activeShortageAlertsCount ?? summary.totalActiveShortages ?? 0;
+        shortagesEl.textContent = count;
+        shortagesEl.style.color = count > 0 ? "#dc2626" : "#059669";
+    }
+}
+
+function renderMonthlyDemandChart(trends) {
+    const canvas = document.getElementById("monthlyDemandChart");
+    if (!canvas || typeof Chart === "undefined") return;
+
+    if (window.monthlyDemandChartInstance) {
+        window.monthlyDemandChartInstance.destroy();
+    }
+
+    const labels = trends.map(t => t.monthLabel);
+    const demandValues = trends.map(t => t.demandUnits);
+    const supplyValues = trends.map(t => t.suppliedUnits ?? t.supplyUnits ?? 0);
+
+    // Identify historical cut-off index
+    const firstForecastIdx = trends.findIndex(t => t.isForecast);
+    const splitIdx = firstForecastIdx >= 0 ? firstForecastIdx : trends.length;
+
+    const ctx = canvas.getContext("2d");
+
+    window.monthlyDemandChartInstance = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Monthly Blood Demand (Units)",
+                    data: demandValues,
+                    borderColor: "#ef4444",
+                    backgroundColor: "rgba(239, 68, 68, 0.08)",
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.35,
+                    pointBackgroundColor: trends.map(t => t.isForecast ? "#f97316" : "#ef4444"),
+                    pointRadius: trends.map(t => t.isForecast ? 5 : 3.5),
+                    pointHoverRadius: 6,
+                    segment: {
+                        borderDash: ctxSeg => ctxSeg.p0DataIndex >= splitIdx - 1 ? [6, 6] : undefined,
+                        borderColor: ctxSeg => ctxSeg.p0DataIndex >= splitIdx - 1 ? "#f97316" : "#ef4444"
+                    }
+                },
+                {
+                    label: "Blood Supply Inflow (Units)",
+                    data: supplyValues,
+                    borderColor: "#10b981",
+                    backgroundColor: "transparent",
+                    borderWidth: 2,
+                    borderDash: [3, 3],
+                    tension: 0.35,
+                    pointRadius: 3,
+                    pointBackgroundColor: "#10b981"
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: "index",
+                intersect: false
+            },
+            plugins: {
+                legend: {
+                    position: "top",
+                    labels: {
+                        boxWidth: 12,
+                        font: { size: 11, family: "Plus Jakarta Sans, sans-serif", weight: "600" }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: "rgba(15, 23, 42, 0.95)",
+                    padding: 10,
+                    callbacks: {
+                        afterLabel: function (context) {
+                            const item = trends[context.dataIndex];
+                            if (item && (item.seasonalContext || item.seasonalNote)) {
+                                return `Context: ${item.seasonalContext || item.seasonalNote}`;
+                            }
+                            return item && item.isForecast ? "Demonstration Projected Value" : "";
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    grid: { color: "#f1f5f9" },
+                    ticks: {
+                        font: { size: 11, family: "Plus Jakarta Sans, sans-serif" }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        maxRotation: 45,
+                        font: { size: 10, family: "Plus Jakarta Sans, sans-serif" }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderComponentChart(components) {
+    const canvas = document.getElementById("componentChart");
+    if (!canvas || typeof Chart === "undefined") return;
+
+    if (window.componentChartInstance) {
+        window.componentChartInstance.destroy();
+    }
+
+    const labels = components.map(c => c.componentName || c.displayName);
+    const data = components.map(c => c.forecast30DayDemandUnits || c.projectedDemand30Days || 0);
+    const colors = ["#ef4444", "#f97316", "#3b82f6", "#8b5cf6", "#10b981"];
+
+    const ctx = canvas.getContext("2d");
+
+    window.componentChartInstance = new Chart(ctx, {
+        type: "doughnut",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    data: data,
+                    backgroundColor: colors,
+                    borderWidth: 2,
+                    borderColor: "#ffffff",
+                    hoverOffset: 6
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: "62%",
+            plugins: {
+                legend: {
+                    position: "bottom",
+                    labels: {
+                        boxWidth: 10,
+                        padding: 12,
+                        font: { size: 10.5, family: "Plus Jakarta Sans, sans-serif", weight: "600" }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: "rgba(15, 23, 42, 0.95)",
+                    callbacks: {
+                        label: function (ctxItem) {
+                            const val = ctxItem.parsed;
+                            return ` ${ctxItem.label}: ${val} units (30d demand)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderBloodGroupChart(groups, horizonDays) {
+    const canvas = document.getElementById("bloodGroupChart");
+    if (!canvas || typeof Chart === "undefined") return;
+
+    if (window.bloodGroupChartInstance) {
+        window.bloodGroupChartInstance.destroy();
+    }
+
+    const labels = groups.map(g => g.bloodGroupDisplay);
+    const stockData = groups.map(g => g.currentInventoryUnits);
+    const demandData = groups.map(g => {
+        if (horizonDays === 7) return g.forecast7DayDemandUnits ?? g.projectedDemand7Days ?? 0;
+        if (horizonDays === 90) return g.forecast90DayDemandUnits ?? g.projectedDemand90Days ?? 0;
+        return g.forecast30DayDemandUnits ?? g.projectedDemand30Days ?? 0;
+    });
+
+    const ctx = canvas.getContext("2d");
+
+    window.bloodGroupChartInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: "Available Inventory (Stock)",
+                    data: stockData,
+                    backgroundColor: "#10b981",
+                    borderRadius: 6,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.75
+                },
+                {
+                    label: `Predicted ${horizonDays}-Day Demand`,
+                    data: demandData,
+                    backgroundColor: "#3b82f6",
+                    borderRadius: 6,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.75
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: "top",
+                    labels: {
+                        boxWidth: 12,
+                        font: { size: 11, family: "Plus Jakarta Sans, sans-serif", weight: "600" }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: "rgba(15, 23, 42, 0.95)"
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: "#f1f5f9" },
+                    ticks: {
+                        font: { size: 11, family: "Plus Jakarta Sans, sans-serif" }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 11, family: "Plus Jakarta Sans, sans-serif", weight: "700" }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderShortages(shortages) {
+    const container = document.getElementById("forecastShortagesContainer");
+    if (!container) return;
+
+    if (!shortages || shortages.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: 1 / -1; background: #ecfdf5; border: 1.5px solid #a7f3d0; border-radius: 12px; padding: 18px 20px; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 24px;">✓</span>
+                <div>
+                    <h4 style="margin: 0; color: #065f46; font-size: 15px;">All Blood Groups & Components at Safe Buffer Levels</h4>
+                    <p style="margin: 2px 0 0 0; color: #047857; font-size: 12.5px;">Current available inventory satisfies multi-horizon clinical demand models across demonstration facilities.</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = shortages.map(s => {
+        const isCritical = s.severity === "CRITICAL" || s.severity === "CRITICAL_DEFICIT";
+        const borderCol = isCritical ? "#fecdd3" : "#fef08a";
+        const bgCol = isCritical ? "#fff1f2" : "#fffbeb";
+        const badgeBg = isCritical ? "#fee2e2" : "#fef3c7";
+        const badgeColor = isCritical ? "#991b1b" : "#92400e";
+        const icon = isCritical ? "🚨" : "⚠️";
+        const comp = s.componentName || s.componentDisplay || "PRBC";
+        const deficit = s.projectedDeficitUnits ?? s.deficitUnits ?? 0;
+        const demand = s.projectedDemand7dUnits ?? s.projectedDemand30Days ?? 0;
+        const action = s.actionRequired || s.recommendedAction || "Coordinate urgent donation drive.";
+
+        return `
+            <div style="background: ${bgCol}; border: 1.5px solid ${borderCol}; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span>${icon}</span>
+                        <strong style="color: #0f172a; font-size: 15px;">Group ${escapeHtml(s.bloodGroupDisplay)} (${escapeHtml(comp)})</strong>
+                    </div>
+                    <span style="background: ${badgeBg}; color: ${badgeColor}; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;">
+                        ${isCritical ? "CRITICAL DEFICIT" : "MODERATE DEFICIT"}
+                    </span>
+                </div>
+                <div style="font-size: 12.5px; color: #475569; margin-bottom: 10px;">
+                    Stock: <strong>${s.currentStockUnits} units</strong> | 7d Demand: <strong>${demand} units</strong>
+                    <div style="color: ${badgeColor}; font-weight: 700; margin-top: 3px;">
+                        Estimated Deficit: -${deficit} units
+                    </div>
+                </div>
+                <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; font-size: 11.5px; color: #334155;">
+                    <strong>Action:</strong> ${escapeHtml(action)}
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+
+function renderBloodGroupsTable(groups, horizonDays) {
+    const tbody = document.getElementById("forecastGroupsTableBody");
+    if (!tbody) return;
+
+    if (!groups || groups.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="padding: 24px; text-align: center; color: #94a3b8;">No blood group forecasts available.</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = groups.map(g => {
+        let badge;
+        if (g.shortageSeverity === "CRITICAL" || g.shortageSeverity === "CRITICAL_DEFICIT") {
+            badge = `<span style="background: #fee2e2; color: #dc2626; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 10.5px;">CRITICAL DEFICIT</span>`;
+        } else if (g.shortageSeverity === "MODERATE" || g.shortageSeverity === "MODERATE_DEFICIT") {
+            badge = `<span style="background: #fef3c7; color: #d97706; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 10.5px;">MODERATE DEFICIT</span>`;
+        } else {
+            badge = `<span style="background: #ecfdf5; color: #059669; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 10.5px;">ADEQUATE</span>`;
+        }
+
+        const deficit = g.deficit30DayUnits ?? g.netDeficit30Days ?? 0;
+        const deficitDisplay = deficit > 0
+            ? `<strong style="color: #dc2626;">-${deficit} units</strong>`
+            : `<span style="color: #059669; font-weight: 600;">+${Math.abs(deficit)} units</span>`;
+
+        const prev = g.populationPrevalencePercent ?? g.indiaPrevalencePercentage ?? 0;
+        const d7 = g.forecast7DayDemandUnits ?? g.projectedDemand7Days ?? 0;
+        const d30 = g.forecast30DayDemandUnits ?? g.projectedDemand30Days ?? 0;
+        const d90 = g.forecast90DayDemandUnits ?? g.projectedDemand90Days ?? 0;
+
+        // Highlight column for selected horizon
+        const cell7Style = horizonDays === 7 ? "background: #eff6ff; font-weight: 800; color: #1e40af;" : "";
+        const cell30Style = horizonDays === 30 ? "background: #eff6ff; font-weight: 800; color: #1e40af;" : "";
+        const cell90Style = horizonDays === 90 ? "background: #eff6ff; font-weight: 800; color: #1e40af;" : "";
+
+        return `
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 12px 14px; font-weight: 800; color: #0f172a;">
+                    <span style="display: inline-block; background: #fee2e2; color: #dc2626; padding: 2px 7px; border-radius: 5px; font-size: 12px; margin-right: 6px;">
+                        ${escapeHtml(g.bloodGroupDisplay)}
+                    </span>
+                </td>
+                <td style="padding: 12px 14px; color: #64748b; font-weight: 600;">${prev}%</td>
+                <td style="padding: 12px 14px; font-weight: 700; color: #059669;">${g.currentInventoryUnits} units</td>
+                <td style="padding: 12px 14px; ${cell7Style}">${d7} units</td>
+                <td style="padding: 12px 14px; ${cell30Style}">${d30} units</td>
+                <td style="padding: 12px 14px; ${cell90Style}">${d90} units</td>
+                <td style="padding: 12px 14px;">${deficitDisplay}</td>
+                <td style="padding: 12px 14px;">${badge}</td>
+                <td style="padding: 12px 14px; font-size: 12px; color: #475569; max-width: 240px;">${escapeHtml(g.recommendation)}</td>
+            </tr>
+        `;
+    }).join("");
+}
+
+function renderComponentCards(components) {
+    const container = document.getElementById("forecastComponentsCardsContainer");
+    if (!container) return;
+
+    if (!components || components.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #94a3b8;">No component forecasts available.</div>';
+        return;
+    }
+
+    container.innerHTML = components.map(c => {
+        const name = c.componentName || c.displayName;
+        const d30 = c.forecast30DayDemandUnits ?? c.projectedDemand30Days ?? 0;
+        const temp = c.shelfLifeDays > 300 ? "-18°C or below" : (c.shelfLifeDays <= 5 ? "20°C - 24°C agitated" : "2°C - 6°C refrigerated");
+        const clinicalUse = c.clinicalIndications || c.primaryClinicalUse || "Clinical transfusion protocol";
+
+        return `
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <div>
+                        <strong style="color: #0f172a; font-size: 14.5px;">${escapeHtml(name)}</strong>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 2px;">Shelf life: ${c.shelfLifeDays} days (${escapeHtml(temp)})</div>
+                    </div>
+                    <span style="background: #eff6ff; color: #2563eb; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px;">
+                        ${c.componentCode || c.component}
+                    </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0 8px 0; font-size: 12.5px;">
+                    <span style="color: #64748b;">Current Stock:</span>
+                    <strong style="color: #059669;">${c.currentInventoryUnits} units</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12.5px;">
+                    <span style="color: #64748b;">30d Demand:</span>
+                    <strong style="color: #2563eb;">${d30} units</strong>
+                </div>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; font-size: 11px; color: #475569;">
+                    <strong>Clinical Use:</strong> ${escapeHtml(clinicalUse)}
+                </div>
+            </div>
+        `;
+    }).join("");
+}
+

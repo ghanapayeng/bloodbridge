@@ -1,5 +1,6 @@
 package BloodBridge.inventory;
 
+import BloodBridge.common.BloodComponent;
 import BloodBridge.common.BloodGroup;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
@@ -21,6 +22,10 @@ public class BloodInventory {
     @Column(name = "rh_type", nullable = false, length = 8)
     private String rhType;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "component", nullable = false, length = 32)
+    private BloodComponent component = BloodComponent.WHOLE_BLOOD;
+
     @Min(0)
     @Column(nullable = false)
     private Integer quantity;
@@ -41,6 +46,9 @@ public class BloodInventory {
     @Column(nullable = false, length = 32)
     private InventoryStatus status;
 
+    @Column(name = "is_demo", nullable = false)
+    private boolean isDemo = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -59,14 +67,30 @@ public class BloodInventory {
             String batchUnitId,
             String facilityName,
             InventoryStatus status) {
+        this(bloodGroup, rhType, BloodComponent.WHOLE_BLOOD, quantity, collectionDate, expiryDate, batchUnitId, facilityName, status, false);
+    }
+
+    public BloodInventory(
+            BloodGroup bloodGroup,
+            String rhType,
+            BloodComponent component,
+            Integer quantity,
+            LocalDate collectionDate,
+            LocalDate expiryDate,
+            String batchUnitId,
+            String facilityName,
+            InventoryStatus status,
+            boolean isDemo) {
         this.bloodGroup = bloodGroup;
         this.rhType = rhType != null ? rhType : (bloodGroup.name().contains("POSITIVE") ? "+" : "-");
+        this.component = component != null ? component : BloodComponent.WHOLE_BLOOD;
         this.quantity = (quantity != null && quantity >= 0) ? quantity : 0;
         this.collectionDate = collectionDate;
         this.expiryDate = expiryDate;
         this.batchUnitId = batchUnitId;
         this.facilityName = facilityName;
         this.status = status != null ? status : InventoryStatus.AVAILABLE;
+        this.isDemo = isDemo;
     }
 
     @PrePersist
@@ -74,6 +98,9 @@ public class BloodInventory {
         Instant now = Instant.now();
         createdAt = now;
         updatedAt = now;
+        if (component == null) {
+            component = BloodComponent.WHOLE_BLOOD;
+        }
         if (quantity == null || quantity < 0) {
             quantity = 0;
         }
@@ -140,6 +167,22 @@ public class BloodInventory {
 
     public void setStatus(InventoryStatus status) {
         this.status = status;
+    }
+
+    public BloodComponent getComponent() {
+        return component != null ? component : BloodComponent.WHOLE_BLOOD;
+    }
+
+    public void setComponent(BloodComponent component) {
+        this.component = component;
+    }
+
+    public boolean isDemo() {
+        return isDemo;
+    }
+
+    public void setDemo(boolean demo) {
+        this.isDemo = demo;
     }
 
     public Instant getCreatedAt() {

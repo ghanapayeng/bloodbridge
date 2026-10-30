@@ -114,6 +114,10 @@ if (loginForm) {
                 return;
             }
 
+            try {
+                sessionStorage.setItem("bloodbridge_user", JSON.stringify(body));
+            } catch (_) {}
+
             showToast("Signed in successfully!", "success");
             setTimeout(() => {
                 window.location.href = "dashboard.html";
@@ -240,6 +244,10 @@ function setupOtpLogin() {
                     showToast(body.message || "Invalid or expired verification code.", "error");
                     return;
                 }
+
+                try {
+                    sessionStorage.setItem("bloodbridge_user", JSON.stringify(body));
+                } catch (_) {}
 
                 showToast("Signed in successfully!", "success");
                 setTimeout(() => {

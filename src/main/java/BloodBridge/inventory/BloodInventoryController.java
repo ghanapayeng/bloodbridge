@@ -1,5 +1,6 @@
 package BloodBridge.inventory;
 
+import BloodBridge.common.BloodComponent;
 import BloodBridge.common.BloodGroup;
 import BloodBridge.inventory.BloodInventoryDtos.*;
 import jakarta.validation.Valid;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/inventory")
+@RequestMapping({"/api/inventory", "/api/v1/inventory"})
 public class BloodInventoryController {
 
     private final BloodInventoryService inventoryService;
@@ -24,8 +25,14 @@ public class BloodInventoryController {
     public ResponseEntity<List<InventoryResponse>> listInventory(
             @RequestParam(required = false) String facilityName,
             @RequestParam(required = false) InventoryStatus status,
-            @RequestParam(required = false) BloodGroup bloodGroup) {
-        return ResponseEntity.ok(inventoryService.getInventory(facilityName, status, bloodGroup));
+            @RequestParam(required = false) BloodGroup bloodGroup,
+            @RequestParam(required = false) BloodComponent component) {
+        return ResponseEntity.ok(inventoryService.getInventory(facilityName, status, bloodGroup, component));
+    }
+
+    @GetMapping("/summary")
+    public ResponseEntity<InventorySummaryResponse> getSummary() {
+        return ResponseEntity.ok(inventoryService.getInventorySummary());
     }
 
     @GetMapping("/alerts")

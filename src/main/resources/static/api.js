@@ -96,6 +96,20 @@ async function apiFetch(url, options = {}) {
         }, 3500);
     }
 
+let _isRedirectingToLogin = false;
+
+function safeRedirectToLogin() {
+    if (_isRedirectingToLogin) return;
+    _isRedirectingToLogin = true;
+    try {
+        sessionStorage.removeItem("bloodbridge_user");
+    } catch (_) {}
+    const path = window.location.pathname.toLowerCase();
+    if (!path.endsWith("login.html") && !path.endsWith("index.html") && !path.endsWith("/")) {
+        window.location.replace("login.html");
+    }
+}
+
     let response;
     try {
         response = await fetch(targetUrl, config);
@@ -106,9 +120,14 @@ async function apiFetch(url, options = {}) {
         }
     }
 
-    if (response.status === 401 && options.redirectOnUnauthorized !== false) {
-        window.location.replace("login.html");
-        return null;
+    if (response.status === 401) {
+        try {
+            sessionStorage.removeItem("bloodbridge_user");
+        } catch (_) {}
+        if (options.redirectOnUnauthorized !== false) {
+            safeRedirectToLogin();
+            return null;
+        }
     }
 
     let data = null;
@@ -133,12 +152,48 @@ async function apiFetch(url, options = {}) {
 }
 
 async function getCurrentUser(redirectIfUnauth = false) {
+    let cachedUser = null;
     try {
-        const user = await apiFetch("/api/auth/me", { redirectOnUnauthorized: redirectIfUnauth });
-        return user;
-    } catch (e) {
+        const stored = sessionStorage.getItem("bloodbridge_user");
+        if (stored) {
+            cachedUser = JSON.parse(stored);
+        }
+    } catch (_) {}
+
+    try {
+        const user = await apiFetch("/api/auth/me", { redirectOnUnauthorized: false });
+        if (user && user.email) {
+            try {
+                sessionStorage.setItem("bloodbridge_user", JSON.stringify(user));
+            } catch (_) {}
+            return user;
+        }
+
+        // If returned null or empty without error
+        try {
+            sessionStorage.removeItem("bloodbridge_user");
+        } catch (_) {}
         if (redirectIfUnauth) {
-            window.location.replace("login.html");
+            safeRedirectToLogin();
+        }
+        return null;
+    } catch (e) {
+        // ONLY redirect on explicit 401 Unauthorized status!
+        if (e && e.status === 401) {
+            try {
+                sessionStorage.removeItem("bloodbridge_user");
+            } catch (_) {}
+            if (redirectIfUnauth) {
+                safeRedirectToLogin();
+            }
+            return null;
+        }
+
+        // Never redirect on network errors, timeouts, CORS issues, or 5xx server cold starts
+        console.warn("Auth verification encountered transient network or server state:", e);
+        if (cachedUser) {
+            console.info("Preserving active session using cached state during transient network disruption.");
+            return cachedUser;
         }
         return null;
     }
@@ -150,6 +205,9 @@ async function logout() {
     } catch (e) {
         console.warn("Logout error:", e);
     } finally {
+        try {
+            sessionStorage.removeItem("bloodbridge_user");
+        } catch (_) {}
         localStorage.removeItem("bloodBridgeDonor");
         window.location.href = "index.html";
     }
