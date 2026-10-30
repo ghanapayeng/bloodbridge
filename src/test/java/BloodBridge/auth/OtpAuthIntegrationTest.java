@@ -341,4 +341,18 @@ class OtpAuthIntegrationTest {
         assertEquals("existing@example.com", userResponse.email());
         assertEquals("Existing User", userResponse.fullName());
     }
+
+    @Test
+    void testSendOtpDefaultsToLoginPurposeForExistingUserWhenPurposeIsOmitted() {
+        String email = "existing@example.com";
+        // Call authController.sendOtp with null purpose
+        var response = authController.sendOtp(new SendOtpRequest(email, "EMAIL", null));
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        // Verify that the created OTP challenge is for LOGIN purpose
+        var challenge = otpRepository
+                .findFirstByIdentifierAndOtpTypeAndPurposeOrderByCreatedAtDesc(email, "EMAIL", "LOGIN");
+        assertTrue(challenge.isPresent());
+        assertEquals("LOGIN", challenge.get().getPurpose());
+    }
 }

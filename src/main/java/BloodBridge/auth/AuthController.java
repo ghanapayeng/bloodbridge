@@ -55,7 +55,11 @@ public class AuthController {
 
     @PostMapping("/otp/send")
     public ResponseEntity<OtpResponse> sendOtp(@Valid @RequestBody SendOtpRequest request) {
-        String purpose = request.purpose() != null && !request.purpose().isBlank() ? request.purpose() : OtpPurpose.REGISTRATION.name();
+        String purpose = request.purpose();
+        if (purpose == null || purpose.isBlank()) {
+            boolean userExists = authService.userExists(request.identifier());
+            purpose = userExists ? OtpPurpose.LOGIN.name() : OtpPurpose.REGISTRATION.name();
+        }
         otpService.sendOtp(request.identifier(), request.type(), purpose);
         return ResponseEntity.ok(new OtpResponse(true, "A verification code has been sent to your email."));
     }

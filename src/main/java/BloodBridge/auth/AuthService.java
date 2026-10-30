@@ -92,4 +92,12 @@ public class AuthService {
     public String normaliseEmail(String email) {
         return email.trim().toLowerCase(Locale.ROOT);
     }
+
+    @Transactional(readOnly = true)
+    public boolean userExists(String email) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+        return userAccountRepository.existsByEmail(normaliseEmail(email));
+    }
 }
