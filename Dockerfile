@@ -32,9 +32,10 @@ COPY --from=build --chown=bloodbridge:bloodbridge /app/target/*.jar app.jar
 
 USER bloodbridge
 
-# Vercel container runtime injects $PORT (defaults to 80 or dynamic port).
-# Local fallback defaults to 8080.
+# Default environment configuration for ports and addresses
 ENV PORT=8080
-EXPOSE 8080
+ENV SERVER_ADDRESS=0.0.0.0
 
-ENTRYPOINT ["sh", "-c", "exec java -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom -jar app.jar --server.port=${PORT:-8080}"]
+EXPOSE 8080 80
+
+ENTRYPOINT ["sh", "-c", "exec java -Dserver.port=${PORT:-8080} -Dserver.address=0.0.0.0 -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom -jar app.jar --server.port=${PORT:-8080} --server.address=0.0.0.0"]

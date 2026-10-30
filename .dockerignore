@@ -1,0 +1,9 @@
+target/
+.git/
+.github/
+.vscode/
+node_modules/
+data/
+*.log
+.env
+.env.*
