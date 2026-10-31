@@ -40,6 +40,19 @@ if (typeof window !== "undefined") {
 }
 
 let _cachedCsrf = null;
+let _isRedirectingToLogin = false;
+
+function safeRedirectToLogin() {
+    if (_isRedirectingToLogin) return;
+    _isRedirectingToLogin = true;
+    try {
+        sessionStorage.removeItem("bloodbridge_user");
+    } catch (_) {}
+    const path = window.location.pathname.toLowerCase();
+    if (!path.endsWith("login.html") && !path.endsWith("index.html") && !path.endsWith("/")) {
+        window.location.replace("login.html");
+    }
+}
 
 async function getCsrfToken() {
     try {
@@ -95,20 +108,6 @@ async function apiFetch(url, options = {}) {
             document.body.appendChild(wakeBanner);
         }, 3500);
     }
-
-let _isRedirectingToLogin = false;
-
-function safeRedirectToLogin() {
-    if (_isRedirectingToLogin) return;
-    _isRedirectingToLogin = true;
-    try {
-        sessionStorage.removeItem("bloodbridge_user");
-    } catch (_) {}
-    const path = window.location.pathname.toLowerCase();
-    if (!path.endsWith("login.html") && !path.endsWith("index.html") && !path.endsWith("/")) {
-        window.location.replace("login.html");
-    }
-}
 
     let response;
     try {

@@ -205,18 +205,39 @@ if (donorForm) {
 
             const updated = await apiFetch("/api/donor-profiles/me", {
                 method: "PUT",
-                body: payload
+                body: payload,
+                redirectOnUnauthorized: false
             });
+
+            if (!updated) {
+                showToast("Could not save donor profile. Please verify your details and try again.", "error");
+                return;
+            }
 
             showToast("Donor profile saved successfully!", "success");
 
-            setTimeout(() => {
-                window.location.href = "dashboard.html";
-            }, 1000);
+            // Update profile status indicator
+            const statusEl = document.querySelector(".profile-status");
+            if (statusEl) {
+                statusEl.innerHTML = `<span style="color:#10b981;">●</span> Profile active (${formatBloodGroup(updated.bloodGroup)})`;
+            }
+
+            // Update verification card & QR
+            renderDigitalCard(updated);
+
+            // Re-evaluate eligibility and cooldown period
+            await loadEligibility();
+
+            // Render updated milestones
+            renderMilestones(updated.totalDonationsCount);
 
         } catch (error) {
             console.error("Save profile error:", error);
-            showToast(error.message || "Failed to save donor profile. Please try again.", "error");
+            if (error && error.status === 401) {
+                showToast("Your session has expired. Please sign in again to save your profile.", "warning");
+            } else {
+                showToast(error.message || "Failed to save donor profile. Please try again.", "error");
+            }
         } finally {
             if (submitBtn) submitBtn.disabled = false;
         }

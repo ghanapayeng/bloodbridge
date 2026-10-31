@@ -181,7 +181,8 @@ async function toggleAvailability() {
                 city: currentProfile.city,
                 available: newStatus,
                 lastDonationDate: currentProfile.lastDonationDate
-            }
+            },
+            redirectOnUnauthorized: false
         });
 
         currentProfile = updated;
