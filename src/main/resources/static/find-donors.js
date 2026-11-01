@@ -7,8 +7,9 @@ const donorsContainer = document.getElementById("donorsContainer");
 const matchStatusCount = document.getElementById("matchStatusCount");
 
 document.addEventListener("DOMContentLoaded", async function () {
-    // Check if user is logged in
-    await getCurrentUser(false);
+    // Check if user is logged in (redirect to login if unauthenticated, preserving query params)
+    const user = await getCurrentUser(true);
+    if (!user) return;
 
     // Read query parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -46,18 +47,25 @@ async function fetchAndRenderDonors() {
     const cityVal = cityInput ? cityInput.value.trim() : "";
     const urgencyVal = urgencySelect ? urgencySelect.value : "MEDIUM";
 
+    const searchBtn = searchForm ? searchForm.querySelector(".search-btn") : null;
+    if (searchBtn) {
+        searchBtn.disabled = true;
+        searchBtn.textContent = "Finding Matches...";
+    }
+
     if (donorsContainer) {
         donorsContainer.innerHTML = `
             <div style="padding: 40px; text-align: center; color: #64748b;">
-                <div style="font-size: 24px; margin-bottom: 8px;">⏳</div>
-                Searching compatible donors...
+                <div style="font-size: 28px; margin-bottom: 8px; animation: pulse 1.5s infinite;">⏳</div>
+                Searching compatible donors across network...
             </div>
         `;
     }
 
     try {
         const params = new URLSearchParams();
-        if (bloodGroupVal) params.append("bloodGroup", bloodGroupVal);
+        const bgEnum = toBloodGroupEnum(bloodGroupVal) || bloodGroupVal;
+        if (bgEnum) params.append("bloodGroup", bgEnum);
         if (cityVal) params.append("city", cityVal);
         if (urgencyVal) params.append("urgency", urgencyVal);
 
@@ -68,14 +76,33 @@ async function fetchAndRenderDonors() {
 
     } catch (error) {
         console.error("Error fetching smart donor matches:", error);
+        if (matchStatusCount) matchStatusCount.textContent = "";
+
         if (donorsContainer) {
-            donorsContainer.innerHTML = `
-                <div style="padding: 30px; text-align: center; color: #dc2626; background: #fef2f2; border-radius: 12px; margin-top: 15px;">
-                    Failed to load smart donor matches: ${error.message}
-                </div>
-            `;
+            if (error && error.status === 401) {
+                donorsContainer.innerHTML = `
+                    <div style="padding: 30px; text-align: center; color: #b91c1c; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; margin-top: 15px;">
+                        <div style="font-size: 28px; margin-bottom: 8px;">🔒</div>
+                        <h3 style="margin-bottom: 6px;">Sign in required for donor search</h3>
+                        <p style="font-size: 14px; color: #64748b; margin-bottom: 16px;">To protect donor privacy, donor matching requires an authenticated account.</p>
+                        <a href="login.html" style="display: inline-block; padding: 10px 20px; background: #dc2626; color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">Sign In to Find Matches</a>
+                    </div>
+                `;
+            } else {
+                donorsContainer.innerHTML = `
+                    <div style="padding: 30px; text-align: center; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; margin-top: 15px;">
+                        <div style="font-size: 24px; margin-bottom: 8px;">⚠️</div>
+                        <p style="font-size: 14px; margin: 0 0 12px 0;">Unable to load donor matches: ${escapeHtml(error.message || "Request failed")}</p>
+                        <button onclick="fetchAndRenderDonors()" style="padding: 8px 18px; background: #dc2626; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Retry Search</button>
+                    </div>
+                `;
+            }
         }
-        if (matchStatusCount) matchStatusCount.textContent = "0 matches found";
+    } finally {
+        if (searchBtn) {
+            searchBtn.disabled = false;
+            searchBtn.textContent = "Find Matches";
+        }
     }
 }
 

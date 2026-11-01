@@ -3,7 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Certificate of Appreciation | BloodBridge</title>
+    <title>Donation Certificate & Recognition | BloodBridge</title>
+    <meta name="description" content="View and print your official BloodBridge Certificate of Appreciation for voluntary blood donation with digital verification QR.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="theme.css">
+    <script>
+        (function(){
+            try {
+                const t = localStorage.getItem('bloodbridge_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e){}
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=DM+Sans:wght@400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
@@ -241,7 +252,10 @@
 
     <div class="action-toolbar">
         <a href="donor.html" class="btn-action">← Back to Donor Profile</a>
-        <div style="display: flex; gap: 12px;">
+        <div style="display: flex; gap: 12px; align-items: center;">
+            <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+                <span class="theme-icon">🌙</span> <span class="theme-label">Theme</span>
+            </button>
             <select id="certSelector" class="btn-action" style="outline: none;" onchange="onCertificateSelected(this.value)">
                 <option value="">Loading certificates...</option>
             </select>
@@ -305,6 +319,8 @@
         </div>
     </div>
 
+    <script src="api.js"></script>
+    <script src="theme.js"></script>
     <script src="certificate.js"></script>
 </body>
 </html>

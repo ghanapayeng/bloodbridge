@@ -236,6 +236,12 @@ async function submitNewBatch(event) {
         return;
     }
 
+    const submitBtn = event.target ? event.target.querySelector('button[type="submit"]') : null;
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Saving Batch...";
+    }
+
     try {
         await apiFetch("/api/v1/inventory", {
             method: "POST",
@@ -260,6 +266,11 @@ async function submitNewBatch(event) {
     } catch (e) {
         console.error("Failed to add batch:", e);
         showToast(e.message || "Failed to add inventory batch.", "error");
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Save Batch";
+        }
     }
 }
 

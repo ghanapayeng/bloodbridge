@@ -63,7 +63,12 @@ const server = http.createServer(async (req, res) => {
     return fs.createReadStream(filePath).pipe(res);
   }
 
-  // Fallback to index.html or 404
+  // Fallback to custom 404.html or generic 404
+  const errorPagePath = path.join(PUBLIC_DIR, '404.html');
+  if (fs.existsSync(errorPagePath)) {
+    res.writeHead(404, { 'Content-Type': 'text/html; charset=UTF-8' });
+    return fs.createReadStream(errorPagePath).pipe(res);
+  }
   res.writeHead(404, { 'Content-Type': 'text/html; charset=UTF-8' });
   res.end('<h1>404 Not Found</h1><p>The requested page was not found on BloodBridge.</p><a href="/">Return Home</a>');
 });

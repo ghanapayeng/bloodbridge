@@ -15,6 +15,12 @@ const loginOtpCountdown = document.getElementById("loginOtpCountdown");
 let otpCooldownTimer = null;
 
 document.addEventListener("DOMContentLoaded", async function () {
+    // If session expired notice is set, notify user
+    if (sessionStorage.getItem("bloodbridge_session_expired")) {
+        sessionStorage.removeItem("bloodbridge_session_expired");
+        showToast("Your session has expired. Please sign in again to continue.", "warning");
+    }
+
     // If already logged in, redirect straight to dashboard
     const user = await getCurrentUser(false);
     if (user) {
@@ -119,8 +125,10 @@ if (loginForm) {
             } catch (_) {}
 
             showToast("Signed in successfully!", "success");
+            const redirectTarget = sessionStorage.getItem("bloodbridge_redirect") || "dashboard.html";
+            sessionStorage.removeItem("bloodbridge_redirect");
             setTimeout(() => {
-                window.location.href = "dashboard.html";
+                window.location.href = redirectTarget;
             }, 600);
 
         } catch (error) {
@@ -250,8 +258,10 @@ function setupOtpLogin() {
                 } catch (_) {}
 
                 showToast("Signed in successfully!", "success");
+                const redirectTarget = sessionStorage.getItem("bloodbridge_redirect") || "dashboard.html";
+                sessionStorage.removeItem("bloodbridge_redirect");
                 setTimeout(() => {
-                    window.location.href = "dashboard.html";
+                    window.location.href = redirectTarget;
                 }, 600);
 
             } catch (err) {

@@ -6,11 +6,14 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadCertificates() {
+    const user = await getCurrentUser(true);
+    if (!user) return;
+
     try {
         const certUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/donations/certificates") : "/api/donations/certificates";
         const res = await fetch(certUrl, { credentials: "include" });
         if (res.status === 401) {
-            window.location.href = "login.html";
+            safeRedirectToLogin();
             return;
         }
         if (!res.ok) {

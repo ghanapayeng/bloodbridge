@@ -4,9 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Login | BloodBridge</title>
+    <title>Sign In | BloodBridge</title>
+    <meta name="description" content="Sign in to your BloodBridge account using your password or email OTP to manage donations, donor readiness, and emergency requests.">
 
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="theme.css">
+    <script>
+        (function(){
+            try {
+                const t = localStorage.getItem('bloodbridge_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e){}
+        })();
+    </script>
 </head>
 
 <body>
@@ -16,10 +27,15 @@
         <!-- LEFT SIDE -->
         <section class="login-intro">
 
-            <a href="index.html" class="logo">
-                <span class="logo-icon">♥</span>
-                <span>Blood<span>Bridge</span></span>
-            </a>
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <a href="index.html" class="logo" id="logoLink">
+                    <span class="logo-icon">♥</span>
+                    <span>Blood<span>Bridge</span></span>
+                </a>
+                <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <span class="theme-icon">🌙</span> <span class="theme-label">Theme</span>
+                </button>
+            </div>
 
             <div class="intro-content">
 
@@ -222,6 +238,7 @@
 
 
     <script src="api.js?v=2.0"></script>
+    <script src="theme.js"></script>
     <script src="login.js?v=2.0"></script>
 
 </body>

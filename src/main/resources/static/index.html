@@ -5,9 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>BloodBridge </title>
+    <title>BloodBridge – Lifesaving Blood Donation & Smart Matching Platform</title>
+    <meta name="description" content="BloodBridge connects compatible blood donors with patients and hospitals in real time using intelligent compatibility matching and emergency coordination.">
 
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="theme.css">
+    <script>
+        (function(){
+            try {
+                const t = localStorage.getItem('bloodbridge_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e){}
+        })();
+    </script>
 </head>
 
 <body>
@@ -18,26 +29,48 @@
 
     <header class="header">
 
-        <a href="index.html" class="logo">
+        <a href="index.html" class="logo" id="logoLink">
             <span class="logo-icon">♥</span>
             <span>Blood<span>Bridge</span></span>
         </a>
 
-        <nav class="nav">
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+                <span class="theme-icon">🌙</span> <span class="theme-label">Theme</span>
+            </button>
 
+            <nav class="nav">
+                <a href="#how-it-works">How It Works</a>
+                <a href="#why-bloodbridge">Why BloodBridge</a>
+                <a href="#about">About</a>
+                <a href="find-donors.html">Find Donors</a>
+
+                <a href="login.html" class="login-link">
+                    Login
+                </a>
+
+                <a href="signup.html" class="nav-button">
+                    Get Started
+                </a>
+            </nav>
+
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle navigation">☰</button>
+        </div>
+
+        <div class="mobile-nav-drawer" id="mobileNavDrawer">
             <a href="#how-it-works">How It Works</a>
             <a href="#why-bloodbridge">Why BloodBridge</a>
             <a href="#about">About</a>
-
-            <a href="login.html" class="login-link">
-                Login
-            </a>
-
-            <a href="signup.html" class="nav-button">
-                Get Started
-            </a>
-
-        </nav>
+            <a href="find-donors.html">Find Donors</a>
+            <a href="request.html">Request Blood</a>
+            <a href="login.html" class="login-link">Login</a>
+            <a href="signup.html" class="nav-button" style="text-align: center;">Get Started</a>
+            <div style="padding: 10px 12px; border-top: 1px solid var(--border-color); margin-top: 4px;">
+                <button class="theme-toggle-btn" onclick="toggleTheme()" style="width: 100%; justify-content: center;">
+                    <span class="theme-icon">🌙</span> <span class="theme-label">Theme</span>
+                </button>
+            </div>
+        </div>
 
     </header>
 
@@ -423,25 +456,54 @@
          FOOTER
          ========================= -->
 
-    <footer class="footer">
+    <footer class="footer" style="padding: 40px 20px; border-top: 1px solid var(--border-color); background: var(--bg-surface);">
+        <div style="max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 30px; text-align: left;">
+            <div style="flex: 1; min-width: 240px;">
+                <div class="footer-logo" style="margin-bottom: 10px;">
+                    <span class="logo-icon">♥</span>
+                    <strong>Blood<span>Bridge</span></strong>
+                </div>
+                <p style="color: var(--text-muted); font-size: 14px; line-height: 1.5; margin-bottom: 12px;">
+                    Connecting voluntary blood donors with patients, emergency centers, and hospitals in real time to save lives.
+                </p>
+                <p style="font-size: 14px; margin: 0;">
+                    Emergency Helpline: <a href="tel:18005550199" style="color: var(--accent-red); font-weight: 700; text-decoration: none;">📞 1800-555-0199</a>
+                </p>
+                <p style="font-size: 14px; margin: 4px 0 0 0;">
+                    Email Support: <a href="mailto:support@bloodbridge.org" style="color: var(--text-secondary); text-decoration: none;">support@bloodbridge.org</a>
+                </p>
+            </div>
 
-        <div class="footer-logo">
-            <span class="logo-icon">♥</span>
-            <strong>Blood<span>Bridge</span></strong>
+            <div style="min-width: 160px;">
+                <strong style="display: block; margin-bottom: 10px; font-size: 14px; color: var(--text-primary);">Lifesaving Links</strong>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
+                    <li><a href="find-donors.html" style="color: var(--text-muted); text-decoration: none;">Smart Donor Search</a></li>
+                    <li><a href="request.html" style="color: var(--text-muted); text-decoration: none;">Request Blood</a></li>
+                    <li><a href="inventory.html" style="color: var(--text-muted); text-decoration: none;">Blood Bank Reserves</a></li>
+                    <li><a href="verify-donor.html" style="color: var(--text-muted); text-decoration: none;">Verify Certificate</a></li>
+                </ul>
+            </div>
+
+            <div style="min-width: 160px;">
+                <strong style="display: block; margin-bottom: 10px; font-size: 14px; color: var(--text-primary);">Accounts & Security</strong>
+                <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
+                    <li><a href="login.html" style="color: var(--text-muted); text-decoration: none;">Donor Login</a></li>
+                    <li><a href="signup.html" style="color: var(--text-muted); text-decoration: none;">Register as Donor</a></li>
+                    <li><a href="donor.html" style="color: var(--text-muted); text-decoration: none;">Donor Profile</a></li>
+                    <li><a href="dashboard.html" style="color: var(--text-muted); text-decoration: none;">Dashboard</a></li>
+                </ul>
+            </div>
         </div>
 
-        <p>
-            Connecting people who can help with people who need help.
-        </p>
-
-        <span>
-            © 2026 BloodBridge
-        </span>
-
+        <div style="max-width: 1100px; margin: 30px auto 0 auto; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px; color: var(--text-muted);">
+            <span>© <span class="copyright-year">2026</span> BloodBridge. All rights reserved.</span>
+            <span>Emergency coordination platform. Not a substitute for clinical diagnostics.</span>
+        </div>
     </footer>
 
 
     <script src="api.js"></script>
+    <script src="theme.js"></script>
     <script src="script.js"></script>
 
 </body>

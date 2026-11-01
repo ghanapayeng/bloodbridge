@@ -1,11 +1,10 @@
 // ===============================================
-// BLOODBRIDGE SIGNUP WITH EMAIL & PHONE OTP VERIFICATION
+// BLOODBRIDGE SIGNUP WITH EMAIL OTP VERIFICATION
 // ===============================================
 
 const signupForm = document.getElementById("signupForm");
 
 let emailVerified = false;
-let phoneVerified = false;
 
 document.addEventListener("DOMContentLoaded", async function () {
     const user = await getCurrentUser(false);
@@ -110,100 +109,6 @@ function setupOtpHandlers() {
             }
         });
     }
-
-    // 2. Phone OTP
-    const sendPhoneOtpBtn = document.getElementById("sendPhoneOtpBtn");
-    const verifyPhoneOtpBtn = document.getElementById("verifyPhoneOtpBtn");
-    const phoneOtpGroup = document.getElementById("phoneOtpGroup");
-    const phoneVerifiedBadge = document.getElementById("phoneVerifiedBadge");
-
-    if (sendPhoneOtpBtn) {
-        sendPhoneOtpBtn.addEventListener("click", async function () {
-            const phoneInput = document.getElementById("phone");
-            const phone = phoneInput ? phoneInput.value.trim() : "";
-            if (!phone || phone.length < 8) {
-                showToast("Please enter a valid phone number first.", "warning");
-                return;
-            }
-
-            sendPhoneOtpBtn.disabled = true;
-            sendPhoneOtpBtn.textContent = "Sending...";
-
-            try {
-                const sendUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/auth/otp/send") : "/api/auth/otp/send";
-                const res = await fetch(sendUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({ identifier: phone, type: "PHONE", purpose: "REGISTRATION" })
-                });
-
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    throw new Error(data.message || (res.status === 429 ? "Please wait before requesting another code." : "Failed to send phone OTP."));
-                }
-
-                if (phoneOtpGroup) phoneOtpGroup.style.display = "block";
-                showToast(`Verification code sent to ${phone}!`, "info");
-
-                // Start cooldown
-                startCooldown(sendPhoneOtpBtn, "Send OTP", 60);
-
-            } catch (err) {
-                console.error("Phone OTP error:", err);
-                showToast(err.message || "Unable to send phone OTP.", "error");
-                sendPhoneOtpBtn.disabled = false;
-                sendPhoneOtpBtn.textContent = "Send OTP";
-            }
-        });
-    }
-
-    if (verifyPhoneOtpBtn) {
-        verifyPhoneOtpBtn.addEventListener("click", async function () {
-            const phoneInput = document.getElementById("phone");
-            const otpInput = document.getElementById("phoneOtp");
-            const phone = phoneInput ? phoneInput.value.trim() : "";
-            const code = otpInput ? otpInput.value.trim() : "";
-
-            if (!code || code.length !== 6) {
-                showToast("Please enter the 6-digit code sent to your phone.", "warning");
-                return;
-            }
-
-            verifyPhoneOtpBtn.disabled = true;
-            verifyPhoneOtpBtn.textContent = "...";
-
-            try {
-                const verifyUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/auth/otp/verify") : "/api/auth/otp/verify";
-                const res = await fetch(verifyUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    credentials: "include",
-                    body: JSON.stringify({ identifier: phone, type: "PHONE", code: code, purpose: "REGISTRATION" })
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    throw new Error(data.message || (res.status === 400 ? "Invalid or expired verification code." : "Verification failed. Please try again."));
-                }
-
-                phoneVerified = true;
-                if (phoneVerifiedBadge) phoneVerifiedBadge.style.display = "inline";
-                verifyPhoneOtpBtn.style.background = "#16a34a";
-                verifyPhoneOtpBtn.textContent = "Verified ✓";
-                verifyPhoneOtpBtn.disabled = true;
-                otpInput.disabled = true;
-                phoneInput.readOnly = true;
-
-                showToast("Phone number verified successfully!", "success");
-
-            } catch (err) {
-                console.error("Phone OTP verify error:", err);
-                showToast(err.message || "Invalid verification code.", "error");
-                verifyPhoneOtpBtn.disabled = false;
-                verifyPhoneOtpBtn.textContent = "Verify";
-            }
-        });
-    }
 }
 
 function startCooldown(button, originalText, seconds) {
@@ -226,15 +131,12 @@ if (signupForm) {
 
         const name = document.getElementById("name").value.trim();
         const email = document.getElementById("email").value.trim();
-        const phone = document.getElementById("phone").value.trim();
         const password = document.getElementById("password").value;
         const confirmPassword = document.getElementById("confirmPassword").value;
         const terms = document.getElementById("terms").checked;
 
         const emailOtpInput = document.getElementById("emailOtp");
-        const phoneOtpInput = document.getElementById("phoneOtp");
         const emailOtp = emailOtpInput ? emailOtpInput.value.trim() : "";
-        const phoneOtp = phoneOtpInput ? phoneOtpInput.value.trim() : "";
 
         if (!name || !email || !password || !confirmPassword) {
             showToast("Please fill in all required fields.", "warning");
@@ -263,14 +165,12 @@ if (signupForm) {
         }
 
         try {
-            // 1. Register with OTP payload
+            // 1. Register with OTP payload (no phone number required)
             const registerPayload = {
                 fullName: name,
                 email: email,
                 password: password,
-                phone: phone,
-                emailOtp: emailOtp || null,
-                phoneOtp: phoneOtp || null
+                emailOtp: emailOtp || null
             };
 
             const regUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/auth/register") : "/api/auth/register";

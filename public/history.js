@@ -243,7 +243,10 @@ function setupModal() {
             }
 
             const submitBtn = form.querySelector('button[type="submit"]');
-            if (submitBtn) submitBtn.disabled = true;
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Saving Record...";
+            }
 
             try {
                 const payload = {
@@ -265,7 +268,10 @@ function setupModal() {
                 console.error("Record donation error:", err);
                 showToast(err.message || "Unable to save donation. Please check details.", "error");
             } finally {
-                if (submitBtn) submitBtn.disabled = false;
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Save Record";
+                }
             }
         });
     }

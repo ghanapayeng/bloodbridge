@@ -1987,7 +1987,35 @@ function renderBloodGroupChart(groups, horizonDays) {
             }
         }
     });
+    window.updateChartsForTheme();
 }
+
+window.updateChartsForTheme = function (theme) {
+    const isDark = (theme || document.documentElement.getAttribute("data-theme")) === "dark";
+    const textColor = isDark ? "#94a3b8" : "#475569";
+    const gridColor = isDark ? "#334155" : "#f1f5f9";
+
+    [window.monthlyDemandChartInstance, window.bloodGroupChartInstance].forEach(chart => {
+        if (!chart) return;
+        if (chart.options && chart.options.scales) {
+            Object.values(chart.options.scales).forEach(scale => {
+                if (scale.ticks) scale.ticks.color = textColor;
+                if (scale.grid) scale.grid.color = gridColor;
+            });
+        }
+        if (chart.options && chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+            chart.options.plugins.legend.labels.color = textColor;
+        }
+        chart.update();
+    });
+
+    if (window.componentChartInstance && window.componentChartInstance.options && window.componentChartInstance.options.plugins) {
+        if (window.componentChartInstance.options.plugins.legend && window.componentChartInstance.options.plugins.legend.labels) {
+            window.componentChartInstance.options.plugins.legend.labels.color = textColor;
+        }
+        window.componentChartInstance.update();
+    }
+};
 
 function renderShortages(shortages) {
     const container = document.getElementById("forecastShortagesContainer");

@@ -355,4 +355,23 @@ class OtpAuthIntegrationTest {
         assertTrue(challenge.isPresent());
         assertEquals("LOGIN", challenge.get().getPurpose());
     }
+
+    @Test
+    void testRegisterWithoutPhoneNumberSucceeds() {
+        String email = "nophone@example.com";
+        otpService.createOtpForTesting(email, "EMAIL", "REGISTRATION", "123456");
+
+        // Verify email OTP
+        boolean verified = otpService.verifyOtp(email, "EMAIL", "123456", "REGISTRATION");
+        assertTrue(verified);
+
+        // Register with no phone number whatsoever
+        RegisterRequest registerRequest = new RegisterRequest("No Phone User", email, "SecurePassword123!");
+        UserAccount registered = authService.register(registerRequest);
+
+        assertNotNull(registered);
+        assertNotNull(registered.getId());
+        assertEquals("No Phone User", registered.getFullName());
+        assertEquals(email, registered.getEmail());
+    }
 }

@@ -134,6 +134,12 @@ async function submitTransferRequest(event) {
         return;
     }
 
+    const submitBtn = event.target ? event.target.querySelector('button[type="submit"]') : null;
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting Request...";
+    }
+
     try {
         await apiFetch("/api/transfers", {
             method: "POST",
@@ -153,6 +159,11 @@ async function submitTransferRequest(event) {
     } catch (e) {
         console.error("Failed to request transfer:", e);
         showToast(e.message || "Failed to submit transfer request.", "error");
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit Request";
+        }
     }
 }
 

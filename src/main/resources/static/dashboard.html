@@ -7,8 +7,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Dashboard | BloodBridge</title>
+    <meta name="description" content="BloodBridge Emergency Blood Coordination & Real-Time Donor Availability Dashboard.">
 
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="theme.css">
+
+    <script>
+        (function(){
+            try {
+                const t = localStorage.getItem('bloodbridge_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e){}
+        })();
+    </script>
 
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
@@ -30,7 +42,7 @@
 
         <!-- LOGO -->
 
-        <div class="logo">
+        <a href="dashboard.html" class="logo" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 8px;">
 
             <span class="heart">♥</span>
 
@@ -38,7 +50,7 @@
                 Blood<span>Bridge</span>
             </span>
 
-        </div>
+        </a>
 
 
         <!-- USER PROFILE -->
@@ -245,6 +257,17 @@
 
             <div class="topbar-right">
 
+                <!-- THEME TOGGLE -->
+                <button
+                    class="theme-toggle-btn"
+                    onclick="toggleTheme()"
+                    aria-label="Toggle theme"
+                    title="Toggle theme"
+                    style="margin-right: 6px;"
+                >
+                    <span class="theme-icon">🌙</span>
+                    <span class="theme-label" style="font-size:12px;">Theme</span>
+                </button>
 
                 <!-- NOTIFICATIONS -->
 
@@ -1221,6 +1244,7 @@
 <!-- ========================= -->
 
 <script src="api.js"></script>
+<script src="theme.js"></script>
 <script src="dashboard.js"></script>
 
 

@@ -118,9 +118,10 @@ public class AuthController {
     }
 
     @GetMapping("/csrf")
-    public CsrfTokenResponse csrf(CsrfToken token) {
+    public CsrfTokenResponse csrf(CsrfToken token, HttpServletRequest request) {
         if (token == null) {
-            return new CsrfTokenResponse("X-XSRF-TOKEN", "_csrf", "");
+            String sessionToken = request.getSession(true).getId();
+            return new CsrfTokenResponse("X-XSRF-TOKEN", "_csrf", sessionToken);
         }
         return new CsrfTokenResponse(token.getHeaderName(), token.getParameterName(), token.getToken());
     }

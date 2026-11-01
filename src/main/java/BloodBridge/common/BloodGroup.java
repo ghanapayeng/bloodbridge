@@ -27,21 +27,26 @@ public enum BloodGroup {
         if (value == null || value.isBlank()) {
             return null;
         }
-        String normalized = value.trim().toUpperCase()
+        String clean = value.trim();
+        // Handle URL query parameter decoding where '+' was decoded to space (e.g. "O ", "A ", "B ", "AB ")
+        if (value.endsWith(" ") && !clean.endsWith("+") && !clean.endsWith("-") && !clean.toUpperCase().endsWith("NEGATIVE") && !clean.toUpperCase().endsWith("POSITIVE")) {
+            clean = clean + "+";
+        }
+        String normalized = clean.toUpperCase()
                 .replace(" ", "_")
                 .replace("-", "_NEGATIVE")
                 .replace("+", "_POSITIVE");
 
         // Handle direct matches after normalization (e.g., A+ -> A_POSITIVE, A- -> A_NEGATIVE)
         for (BloodGroup bg : values()) {
-            if (bg.name().equalsIgnoreCase(normalized) || bg.display.equalsIgnoreCase(value.trim())) {
+            if (bg.name().equalsIgnoreCase(normalized) || bg.display.equalsIgnoreCase(clean)) {
                 return bg;
             }
         }
 
         // Also check if original matches name
         for (BloodGroup bg : values()) {
-            if (bg.name().equalsIgnoreCase(value.trim())) {
+            if (bg.name().equalsIgnoreCase(clean) || bg.name().equalsIgnoreCase(normalized)) {
                 return bg;
             }
         }

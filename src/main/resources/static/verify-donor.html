@@ -3,8 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verified Donor Card | BloodBridge</title>
+    <title>Verify Donor Certificate & Credentials | BloodBridge</title>
+    <meta name="description" content="Public cryptographic verification portal for BloodBridge registered blood donors, digital health cards, and donation credentials.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="theme.css">
+    <script>
+        (function(){
+            try {
+                const t = localStorage.getItem('bloodbridge_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e){}
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -96,6 +107,12 @@
 </head>
 <body>
 
+<div style="position: absolute; top: 16px; right: 16px;">
+    <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+        <span class="theme-icon">🌙</span> <span class="theme-label">Theme</span>
+    </button>
+</div>
+
 <div class="verify-card" id="cardContainer">
     <div class="card-header">
         <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9;">
@@ -160,6 +177,7 @@
 </div>
 
 <script src="api.js"></script>
+<script src="theme.js"></script>
 <script src="verify-donor.js"></script>
 </body>
 </html>

@@ -4,9 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Request Blood | BloodBridge</title>
+    <title>Request Blood Urgently | BloodBridge</title>
+    <meta name="description" content="Submit an urgent blood request with required blood group, hospital, and location to notify compatible voluntary donors in real time.">
 
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="request.css">
+    <link rel="stylesheet" href="theme.css">
+    <script>
+        (function(){
+            try {
+                const t = localStorage.getItem('bloodbridge_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e){}
+        })();
+    </script>
 </head>
 
 <body>
@@ -14,14 +25,19 @@
     <!-- HEADER -->
     <header class="header">
 
-        <a href="dashboard.html" class="logo">
+        <a href="dashboard.html" class="logo" id="logoLink">
             <span class="logo-icon">♥</span>
             <span>Blood<span>Bridge</span></span>
         </a>
 
-        <a href="dashboard.html" class="back-link">
-            ← Back to Dashboard
-        </a>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+                <span class="theme-icon">🌙</span> <span class="theme-label">Theme</span>
+            </button>
+            <a href="dashboard.html" class="back-link">
+                ← Back to Dashboard
+            </a>
+        </div>
 
     </header>
 
@@ -306,6 +322,7 @@
 
 
     <script src="api.js"></script>
+    <script src="theme.js"></script>
     <script src="request.js"></script>
 
 </body>

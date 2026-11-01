@@ -3,8 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blood Inventory & Expiry | BloodBridge</title>
+    <title>Blood Inventory & Bank Reserves | BloodBridge</title>
+    <meta name="description" content="Monitor hospital blood bank reserves, component inventory, expiry dates, and unit reservations in real time.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="theme.css">
+    <script>
+        (function(){
+            try {
+                const t = localStorage.getItem('bloodbridge_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e){}
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         .demo-notice-bar {
@@ -127,10 +138,10 @@
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
-        <div class="logo">
+        <a href="dashboard.html" class="logo" id="logoLink" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 8px;">
             <span class="heart">♥</span>
             <span>Blood<span>Bridge</span></span>
-        </div>
+        </a>
 
         <nav class="sidebar-nav">
             <p class="nav-title">MAIN</p>
@@ -163,6 +174,9 @@
                 <small style="color: #64748b; font-size: 12px;">Real-time stock monitoring & component tracking</small>
             </div>
             <div class="topbar-right" style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <span class="theme-icon">🌙</span> <span class="theme-label">Theme</span>
+                </button>
                 <button type="button" onclick="openAddBatchModal()" style="cursor: pointer; background: #dc2626; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;">
                     <span>＋</span> Add Inventory Batch
                 </button>
@@ -398,6 +412,7 @@
 </div>
 
 <script src="api.js"></script>
+<script src="theme.js"></script>
 <script src="inventory.js"></script>
 </body>
 </html>

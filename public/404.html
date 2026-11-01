@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found (404) | BloodBridge</title>
+    <meta name="description" content="The page you are looking for does not exist on BloodBridge. Return to our lifesaving blood donor network.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="theme.css">
+    <script>
+        (function(){
+            try {
+                const t = localStorage.getItem('bloodbridge_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e){}
+        })();
+    </script>
+    <style>
+        .error-container {
+            min-height: calc(100vh - 160px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .error-code {
+            font-size: 88px;
+            font-weight: 800;
+            color: var(--accent-red);
+            line-height: 1;
+            margin-bottom: 12px;
+            letter-spacing: -2px;
+        }
+        .error-title {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+        .error-desc {
+            font-size: 16px;
+            color: var(--text-muted);
+            max-width: 480px;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+        .error-actions {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .btn-primary {
+            background: var(--accent-red);
+            color: white !important;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background: var(--bg-surface-subtle);
+            color: var(--text-primary) !important;
+            border: 1px solid var(--border-color);
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            background: var(--bg-surface-hover);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="logo">
+            <span class="logo-icon">♥</span>
+            <span>Blood<span>Bridge</span></span>
+        </a>
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+                <span class="theme-icon">🌙</span> <span class="theme-label">Theme</span>
+            </button>
+            <a href="dashboard.html" class="nav-button" style="padding: 8px 16px; font-size: 14px;">Dashboard</a>
+        </div>
+    </header>
+
+    <main class="error-container">
+        <div class="error-code">404</div>
+        <div style="font-size: 40px; margin-bottom: 12px;">🩸</div>
+        <h1 class="error-title">Page Not Found</h1>
+        <p class="error-desc">
+            The page you are looking for may have been moved, renamed, or is temporarily unavailable. 
+            Every second counts—let’s get you back to the network.
+        </p>
+        <div class="error-actions">
+            <a href="dashboard.html" class="btn-primary">Go to Dashboard →</a>
+            <a href="index.html" class="btn-secondary">Back to Homepage</a>
+        </div>
+    </main>
+
+    <footer class="footer" style="padding: 24px 20px; text-align: center; font-size: 13px; color: var(--text-muted);">
+        <p>© <span class="copyright-year">2026</span> BloodBridge. All rights reserved. Lifesaving Blood Coordination Platform.</p>
+    </footer>
+
+    <script src="theme.js"></script>
+</body>
+</html>

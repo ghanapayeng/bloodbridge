@@ -50,6 +50,14 @@ function safeRedirectToLogin() {
     } catch (_) {}
     const path = window.location.pathname.toLowerCase();
     if (!path.endsWith("login.html") && !path.endsWith("index.html") && !path.endsWith("/")) {
+        try {
+            const page = window.location.pathname.split("/").pop() || "";
+            const currentUrl = page + window.location.search;
+            if (currentUrl && !currentUrl.startsWith("login") && !currentUrl.startsWith("signup")) {
+                sessionStorage.setItem("bloodbridge_redirect", currentUrl);
+                sessionStorage.setItem("bloodbridge_session_expired", "1");
+            }
+        } catch (_) {}
         window.location.replace("login.html");
     }
 }

@@ -21,6 +21,14 @@ class BloodGroupParsingTests {
     }
 
     @Test
+    void parsesUrlDecodedQueryValues() {
+        assertEquals(BloodGroup.O_POSITIVE, BloodGroup.from("O "));
+        assertEquals(BloodGroup.A_POSITIVE, BloodGroup.from("A "));
+        assertEquals(BloodGroup.B_POSITIVE, BloodGroup.from("B "));
+        assertEquals(BloodGroup.AB_POSITIVE, BloodGroup.from("AB "));
+    }
+
+    @Test
     void parsesStandardEnumNames() {
         assertEquals(BloodGroup.A_POSITIVE, BloodGroup.from("A_POSITIVE"));
         assertEquals(BloodGroup.B_NEGATIVE, BloodGroup.from("B_NEGATIVE"));

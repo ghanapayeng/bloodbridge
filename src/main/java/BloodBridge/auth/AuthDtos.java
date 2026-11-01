@@ -21,6 +21,10 @@ public final class AuthDtos {
         public RegisterRequest(String fullName, String email, String password) {
             this(fullName, email, password, null, null, null);
         }
+
+        public RegisterRequest(String fullName, String email, String password, String emailOtp) {
+            this(fullName, email, password, null, emailOtp, null);
+        }
     }
 
     public record LoginRequest(

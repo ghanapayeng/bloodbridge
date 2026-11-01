@@ -3,8 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hospital Blood Transfers | BloodBridge</title>
+    <title>Hospital Blood Unit Transfers | BloodBridge</title>
+    <meta name="description" content="Coordinate inter-hospital blood unit transfers, track cold-chain transit, and manage hospital fulfillment requests.">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="stylesheet" href="dashboard.css">
+    <link rel="stylesheet" href="theme.css">
+    <script>
+        (function(){
+            try {
+                const t = localStorage.getItem('bloodbridge_theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e){}
+        })();
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         .transfer-card {
@@ -75,10 +86,10 @@
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
-        <div class="logo">
+        <a href="dashboard.html" class="logo" id="logoLink" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 8px;">
             <span class="heart">♥</span>
             <span>Blood<span>Bridge</span></span>
-        </div>
+        </a>
 
         <nav class="sidebar-nav">
             <p class="nav-title">MAIN</p>
@@ -106,7 +117,10 @@
             <div style="font-size: 18px; font-weight: 700; color: #1e293b;">
                 ⇄ Inter-Hospital Blood Transfer Network
             </div>
-            <div class="topbar-right">
+            <div class="topbar-right" style="display: flex; gap: 10px; align-items: center;">
+                <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <span class="theme-icon">🌙</span> <span class="theme-label">Theme</span>
+                </button>
                 <button type="button" onclick="openRequestTransferModal()" style="cursor: pointer; background: #dc2626; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 13px;">
                     + Request Transfer
                 </button>
@@ -225,6 +239,7 @@
 </div>
 
 <script src="api.js"></script>
+<script src="theme.js"></script>
 <script src="transfers.js"></script>
 </body>
 </html>
