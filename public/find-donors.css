@@ -122,8 +122,8 @@ body {
    ========================= */
 
 .search-card {
-    background: #ffffff;
-    border: 1px solid #eee7e4;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
     border-radius: 18px;
     padding: 27px 30px;
     margin-bottom: 34px;
@@ -136,10 +136,11 @@ body {
 .search-header h2 {
     font-size: 18px;
     margin-bottom: 5px;
+    color: var(--text-primary);
 }
 
 .search-header p {
-    color: #888;
+    color: var(--text-muted);
     font-size: 13px;
 }
 

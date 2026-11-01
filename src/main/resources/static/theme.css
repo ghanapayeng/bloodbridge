@@ -155,7 +155,8 @@ header, .header, nav.nav, .navbar {
 .card, .dashboard-card, .metric-card, .donor-card, .request-card, 
 .signup-card, .login-card, .inventory-card, .benefit, .summary-card,
 .stat-box, .stat-card, .section-card, .table-container, .modal-content,
-.hero-card, .info-card {
+.hero-card, .info-card, .form-card, .search-card, .panel, .forecast-panel,
+.verify-card, .auth-card, #digitalCardSection, #milestonesSection {
     background-color: var(--bg-surface) !important;
     border-color: var(--border-color) !important;
     color: var(--text-primary);
@@ -163,9 +164,145 @@ header, .header, nav.nav, .navbar {
 }
 
 /* Secondary cards / Subtle surfaces */
-.user-mini, .filter-bar, .search-container, .bg-subtle, .tag-container {
+.user-mini, .filter-bar, .search-container, .bg-subtle, .tag-container,
+.availability-box, .urgency-option, .badge-card, #eligibilityCard,
+.profile-status, .match-status {
     background-color: var(--bg-surface-subtle) !important;
     border-color: var(--border-color) !important;
+    color: var(--text-primary);
+}
+
+/* Availability Box */
+.availability-box {
+    background-color: var(--bg-surface-subtle) !important;
+    border: 1px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.availability-box strong,
+.availability-box #availabilityText {
+    color: var(--text-primary) !important;
+}
+
+.availability-box small {
+    color: var(--text-muted) !important;
+}
+
+/* Form Headings, Labels, & Buttons */
+.form-group label {
+    color: var(--text-primary) !important;
+}
+
+.section-title h2,
+.search-header h2 {
+    color: var(--text-primary) !important;
+}
+
+.section-title p,
+.search-header p,
+.page-intro p:not(.small-heading) {
+    color: var(--text-muted) !important;
+}
+
+.cancel-btn {
+    background-color: var(--bg-surface-subtle) !important;
+    color: var(--text-secondary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.cancel-btn:hover {
+    background-color: var(--bg-surface-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Badges & Milestone Cards */
+.badge-card {
+    background-color: var(--bg-surface-subtle) !important;
+    border: 1.5px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.badge-card > div:nth-child(2) {
+    color: var(--text-primary) !important;
+}
+
+.badge-card > div:nth-child(3) {
+    color: var(--text-muted) !important;
+}
+
+/* Eligibility & Digital Card */
+#eligibilityCard {
+    background-color: var(--bg-surface-subtle) !important;
+    border: 1.5px solid var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+#eligibilityCard strong {
+    color: var(--text-primary) !important;
+}
+
+#eligibilityReason {
+    color: var(--text-secondary) !important;
+}
+
+#cooldownDetails {
+    color: var(--text-muted) !important;
+}
+
+#digitalCardSection {
+    background: var(--bg-surface) !important;
+    border: 1.5px solid var(--border-color) !important;
+}
+
+#digitalCardSection h2 {
+    color: var(--accent-red) !important;
+}
+
+#digitalCardSection p {
+    color: var(--text-secondary) !important;
+}
+
+#cardDonorName {
+    color: var(--text-primary) !important;
+}
+
+#cardDonorUuid {
+    background-color: var(--bg-surface-subtle) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+#qrCodeContainer {
+    background: #ffffff !important;
+    border-color: var(--border-color) !important;
+}
+
+/* Urgency Options */
+.urgency-option {
+    background-color: var(--bg-surface-subtle) !important;
+    border-color: var(--border-color) !important;
+    color: var(--text-primary) !important;
+}
+
+.urgency-option strong {
+    color: var(--text-primary) !important;
+}
+
+.urgency-option small {
+    color: var(--text-muted) !important;
+}
+
+.urgency-option:hover {
+    background-color: var(--bg-surface-hover) !important;
+}
+
+.urgency-option:has(input:checked) {
+    background-color: var(--accent-red-subtle) !important;
+    border-color: var(--accent-red) !important;
+}
+
+.urgency-option:has(input:checked) strong {
+    color: var(--accent-red) !important;
 }
 
 /* Form inputs & Controls */

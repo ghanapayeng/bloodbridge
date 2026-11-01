@@ -81,6 +81,16 @@ async function apiFetch(url, options = {}) {
     const method = (options.method || "GET").toUpperCase();
     const headers = Object.assign({}, options.headers || {});
 
+    // Attach Authorization header if any token exists in storage
+    const storedToken = localStorage.getItem("bloodbridge_token") ||
+                        localStorage.getItem("token") ||
+                        localStorage.getItem("jwt_token") ||
+                        sessionStorage.getItem("bloodbridge_token") ||
+                        sessionStorage.getItem("token");
+    if (storedToken && !headers["Authorization"] && !headers["authorization"]) {
+        headers["Authorization"] = storedToken.startsWith("Bearer ") ? storedToken : `Bearer ${storedToken}`;
+    }
+
     if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
         if (!_cachedCsrf) {
             await getCsrfToken();
@@ -127,16 +137,6 @@ async function apiFetch(url, options = {}) {
         }
     }
 
-    if (response.status === 401) {
-        try {
-            sessionStorage.removeItem("bloodbridge_user");
-        } catch (_) {}
-        if (options.redirectOnUnauthorized !== false) {
-            safeRedirectToLogin();
-            return null;
-        }
-    }
-
     let data = null;
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.includes("application/json")) {
@@ -145,6 +145,57 @@ async function apiFetch(url, options = {}) {
         } catch (e) {
             data = null;
         }
+    }
+
+    // Handle 401 Unauthorized: Only redirect on genuine session check (e.g. /api/auth/me)
+    if (response.status === 401) {
+        const isAuthProbe = url.includes("/api/auth/me");
+        if (isAuthProbe && options.redirectOnUnauthorized !== false) {
+            try {
+                sessionStorage.removeItem("bloodbridge_user");
+            } catch (_) {}
+            safeRedirectToLogin();
+            return null;
+        }
+
+        const errorMsg = (data && (data.message || data.error)) || "Session unauthorized or expired.";
+        if (typeof showToast === "function") {
+            showToast(errorMsg, "error");
+        }
+        const error = new Error(errorMsg);
+        error.status = 401;
+        error.data = data;
+        throw error;
+    }
+
+    // Handle 403 Forbidden: Display permission warning, DO NOT redirect
+    if (response.status === 403) {
+        const errorMsg = (data && (data.message || data.error)) || "Access denied: You do not have permission for this action.";
+        if (typeof showToast === "function") {
+            showToast(errorMsg, "error");
+        }
+        const error = new Error(errorMsg);
+        error.status = 403;
+        error.data = data;
+        throw error;
+    }
+
+    // Handle 400 Bad Request / Validation errors: Display actionable feedback, DO NOT redirect
+    if (response.status === 400) {
+        let errorMsg = (data && (data.message || data.error)) || "Validation error: Please check your input.";
+        if (data && data.fields && typeof data.fields === "object") {
+            const fieldDetails = Object.entries(data.fields).map(([k, v]) => `${k}: ${v}`).join(", ");
+            if (fieldDetails) errorMsg = `Validation failed: ${fieldDetails}`;
+        } else if (data && Array.isArray(data.errors)) {
+            errorMsg = data.errors.map(err => err.defaultMessage || err.message || JSON.stringify(err)).join(", ");
+        }
+        if (typeof showToast === "function") {
+            showToast(errorMsg, "warning");
+        }
+        const error = new Error(errorMsg);
+        error.status = 400;
+        error.data = data;
+        throw error;
     }
 
     if (!response.ok) {

@@ -34,13 +34,13 @@ public class SecurityConfig {
     UserDetailsService userDetailsService(UserAccountRepository users) {
         return email -> users.findByEmail(email)
                 .map(user -> {
-                    String roleName = user.getRole() != null ? user.getRole() : "ROLE_USER";
-                    if (roleName.startsWith("ROLE_")) {
+                    String roleName = user.getRole() != null ? user.getRole().trim() : "USER";
+                    if (roleName.toUpperCase().startsWith("ROLE_")) {
                         roleName = roleName.substring(5);
                     }
                     return User.withUsername(user.getEmail())
                             .password(user.getPasswordHash())
-                            .roles(roleName)
+                            .roles(roleName.toUpperCase())
                             .build();
                 })
                 .orElseThrow(() -> new UsernameNotFoundException("Invalid email or password."));

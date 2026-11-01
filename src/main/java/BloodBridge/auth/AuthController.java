@@ -9,6 +9,7 @@ import BloodBridge.auth.AuthDtos.UserResponse;
 import BloodBridge.auth.AuthDtos.VerifyOtpRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -83,6 +85,8 @@ public class AuthController {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
+        HttpSession session = servletRequest.getSession(true);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
         securityContextRepository.saveContext(context, servletRequest, servletResponse);
 
         return UserResponse.from(authService.requireByEmail(authentication.getName()));
@@ -95,10 +99,11 @@ public class AuthController {
             HttpServletResponse servletResponse) {
         UserAccount user = authService.loginWithOtp(request.email(), request.code());
 
-        String roleName = user.getRole() != null ? user.getRole() : "ROLE_USER";
-        if (roleName.startsWith("ROLE_")) {
+        String roleName = user.getRole() != null ? user.getRole().trim() : "USER";
+        if (roleName.toUpperCase().startsWith("ROLE_")) {
             roleName = roleName.substring(5);
         }
+        roleName = roleName.toUpperCase();
 
         UserDetails userDetails = User
                 .withUsername(user.getEmail())
@@ -112,6 +117,8 @@ public class AuthController {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
+        HttpSession session = servletRequest.getSession(true);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
         securityContextRepository.saveContext(context, servletRequest, servletResponse);
 
         return UserResponse.from(user);
