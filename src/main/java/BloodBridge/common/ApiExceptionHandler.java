@@ -45,8 +45,23 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     ResponseEntity<ApiError> handleAuthentication(AuthenticationException exception) {
+        Throwable cause = exception.getCause();
+        if (cause instanceof org.springframework.dao.DataAccessException || cause instanceof java.sql.SQLException) {
+            log.error("[DB FAILURE DURING AUTH] Database connection error: {}", cause.getMessage(), cause);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ApiError(
+                    Instant.now(), HttpStatus.SERVICE_UNAVAILABLE.value(), "Service Unavailable",
+                    "Database is temporarily unreachable. Please retry.", Map.of()));
+        }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ApiError(
                 Instant.now(), HttpStatus.UNAUTHORIZED.value(), "Unauthorized", "Invalid email or password.", Map.of()));
+    }
+
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    ResponseEntity<ApiError> handleDatabaseError(org.springframework.dao.DataAccessException exception) {
+        log.error("[DATABASE ACCESS ERROR] {}", exception.getMessage(), exception);
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(new ApiError(
+                Instant.now(), HttpStatus.SERVICE_UNAVAILABLE.value(), "Service Unavailable",
+                "Database error or timeout. Please retry.", Map.of()));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

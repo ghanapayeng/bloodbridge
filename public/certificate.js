@@ -10,16 +10,7 @@ async function loadCertificates() {
     if (!user) return;
 
     try {
-        const certUrl = typeof buildApiUrl === "function" ? buildApiUrl("/api/donations/certificates") : "/api/donations/certificates";
-        const res = await fetch(certUrl, { credentials: "include" });
-        if (res.status === 401) {
-            safeRedirectToLogin();
-            return;
-        }
-        if (!res.ok) {
-            throw new Error("Unable to retrieve donation certificates");
-        }
-        certificates = await res.json();
+        certificates = await apiFetch("/api/donations/certificates", { redirectOnUnauthorized: false }) || [];
         const selector = document.getElementById("certSelector");
 
         if (!certificates || certificates.length === 0) {
