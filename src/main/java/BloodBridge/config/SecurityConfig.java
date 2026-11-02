@@ -59,6 +59,19 @@ public class SecurityConfig {
     }
 
     @Bean
+    org.springframework.session.web.http.CookieSerializer cookieSerializer(
+            @org.springframework.beans.factory.annotation.Value("${server.servlet.session.cookie.secure:true}") boolean secureCookie) {
+        org.springframework.session.web.http.DefaultCookieSerializer serializer = new org.springframework.session.web.http.DefaultCookieSerializer();
+        serializer.setCookieName("JSESSIONID");
+        serializer.setCookiePath("/");
+        serializer.setUseHttpOnlyCookie(true);
+        serializer.setUseSecureCookie(secureCookie);
+        serializer.setSameSite("Lax");
+        serializer.setCookieMaxAge(604800);
+        return serializer;
+    }
+
+    @Bean
     org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
         org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
         configuration.setAllowedOriginPatterns(java.util.List.of(

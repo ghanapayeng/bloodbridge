@@ -639,13 +639,27 @@ async function loadRecentActivity() {
 
 async function loadNotificationsBadge() {
     try {
-        const res = await apiFetch("/api/notifications/unread-count", { redirectOnUnauthorized: false });
+        const res = await apiFetch("/api/notifications/unread-count", { redirectOnUnauthorized: false, showToast: false });
         const unreadCount = res ? (res.unreadCount || 0) : 0;
         const dot = document.querySelector(".notification-btn .notification-dot");
         if (dot) {
             dot.style.display = unreadCount > 0 ? "block" : "none";
         }
     } catch (e) {
+        if (e && e.status === 401) {
+            try {
+                const retryRes = await apiFetch("/api/notifications/unread-count", { redirectOnUnauthorized: false, showToast: false });
+                const unreadCount = retryRes ? (retryRes.unreadCount || 0) : 0;
+                const dot = document.querySelector(".notification-btn .notification-dot");
+                if (dot) dot.style.display = unreadCount > 0 ? "block" : "none";
+                return;
+            } catch (retryErr) {
+                if (retryErr && retryErr.status === 401) {
+                    const user = await getCurrentUser(false);
+                    if (!user) safeRedirectToLogin();
+                }
+            }
+        }
         console.warn("Failed to load notifications unread count:", e);
     }
 }
@@ -889,6 +903,37 @@ function closeChat() {
     activeChat = null;
 }
 
+function renderChatMessagesList(messages, container) {
+    if (!messages || messages.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: #94a3b8; padding: 40px 20px;">
+                <div style="font-size: 32px; margin-bottom: 8px;">💬</div>
+                <strong style="color: #475569;">Start a conversation</strong>
+                <p style="margin: 4px 0 0; font-size: 13px;">Coordinate donation timing, blood units, and hospital arrival safely.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 60;
+
+    container.innerHTML = messages.map(msg => {
+        const isMine = msg.senderId === currentUser.id;
+        const timeStr = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `
+            <div class="chat-bubble ${isMine ? 'mine' : 'theirs'}">
+                <div class="chat-bubble-content">${escapeHtml(msg.content)}</div>
+                <span class="chat-time">${timeStr}</span>
+            </div>
+        `;
+    }).join("");
+
+    if (isScrolledToBottom || !container.getAttribute("data-loaded")) {
+        container.scrollTop = container.scrollHeight;
+        container.setAttribute("data-loaded", "true");
+    }
+}
+
 async function loadChatMessages() {
     if (!activeChat || !currentUser) return;
     const container = document.getElementById("chatMessagesContainer");
@@ -896,38 +941,26 @@ async function loadChatMessages() {
 
     try {
         const messages = await apiFetch(`/api/chat/requests/${activeChat.requestId}/conversations/${activeChat.otherUserId}`, {
-            redirectOnUnauthorized: false
+            redirectOnUnauthorized: false,
+            showToast: false
         }) || [];
-
-        if (messages.length === 0) {
-            container.innerHTML = `
-                <div style="text-align: center; color: #94a3b8; padding: 40px 20px;">
-                    <div style="font-size: 32px; margin-bottom: 8px;">💬</div>
-                    <strong style="color: #475569;">Start a conversation</strong>
-                    <p style="margin: 4px 0 0; font-size: 13px;">Coordinate donation timing, blood units, and hospital arrival safely.</p>
-                </div>
-            `;
-            return;
-        }
-
-        const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 60;
-
-        container.innerHTML = messages.map(msg => {
-            const isMine = msg.senderId === currentUser.id;
-            const timeStr = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            return `
-                <div class="chat-bubble ${isMine ? 'mine' : 'theirs'}">
-                    <div class="chat-bubble-content">${escapeHtml(msg.content)}</div>
-                    <span class="chat-time">${timeStr}</span>
-                </div>
-            `;
-        }).join("");
-
-        if (isScrolledToBottom || !container.getAttribute("data-loaded")) {
-            container.scrollTop = container.scrollHeight;
-            container.setAttribute("data-loaded", "true");
-        }
+        renderChatMessagesList(messages, container);
     } catch (e) {
+        if (e && e.status === 401) {
+            try {
+                const retryMessages = await apiFetch(`/api/chat/requests/${activeChat.requestId}/conversations/${activeChat.otherUserId}`, {
+                    redirectOnUnauthorized: false,
+                    showToast: false
+                }) || [];
+                renderChatMessagesList(retryMessages, container);
+                return;
+            } catch (retryErr) {
+                if (retryErr && retryErr.status === 401) {
+                    const user = await getCurrentUser(false);
+                    if (!user) safeRedirectToLogin();
+                }
+            }
+        }
         console.warn("Failed to load chat messages:", e);
     }
 }
@@ -1275,22 +1308,43 @@ async function sendCallSignal(payload) {
     });
 }
 
+let notificationsPollTimer = null;
+
 function startCallSignalListener() {
     clearInterval(callPollTimer);
     callPollTimer = setInterval(pollCallSignals, 2500);
+
+    clearInterval(notificationsPollTimer);
+    notificationsPollTimer = setInterval(loadNotificationsBadge, 10000);
 }
 
 async function pollCallSignals() {
     if (!currentUser) return;
     try {
-        const signals = await apiFetch("/api/calls/poll", { redirectOnUnauthorized: false });
+        const signals = await apiFetch("/api/calls/poll", { redirectOnUnauthorized: false, showToast: false });
         if (!signals || !Array.isArray(signals) || signals.length === 0) return;
 
         for (const sig of signals) {
             await handleIncomingSignal(sig);
         }
     } catch (e) {
-        // Silently ignore polling hiccups
+        if (e && e.status === 401) {
+            try {
+                const retrySignals = await apiFetch("/api/calls/poll", { redirectOnUnauthorized: false, showToast: false });
+                if (retrySignals && Array.isArray(retrySignals)) {
+                    for (const sig of retrySignals) {
+                        await handleIncomingSignal(sig);
+                    }
+                }
+                return;
+            } catch (retryErr) {
+                if (retryErr && retryErr.status === 401) {
+                    const user = await getCurrentUser(false);
+                    if (!user) safeRedirectToLogin();
+                }
+            }
+        }
+        // Silently ignore transient polling hiccups
     }
 }
 

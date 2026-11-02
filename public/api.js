@@ -234,7 +234,7 @@ async function getCurrentUser(redirectIfUnauth = false) {
             return user;
         }
 
-        // If returned null or empty without error
+        // /api/auth/me returned 200 but with null/empty body — treat as unauthenticated.
         try {
             sessionStorage.removeItem("bloodbridge_user");
             localStorage.removeItem("bloodbridge_user");
@@ -244,7 +244,8 @@ async function getCurrentUser(redirectIfUnauth = false) {
         }
         return null;
     } catch (e) {
-        // ONLY redirect on explicit 401 Unauthorized status!
+        // On explicit 401: the backend has no session for this user.
+        // With JDBC sessions this is a definitive signal — clear cache and redirect.
         if (e && e.status === 401) {
             try {
                 sessionStorage.removeItem("bloodbridge_user");
@@ -256,8 +257,10 @@ async function getCurrentUser(redirectIfUnauth = false) {
             return null;
         }
 
-        // Never redirect on network errors, timeouts, CORS issues, or 5xx server cold starts
-        console.warn("Auth verification encountered transient network or server state:", e);
+        // On network errors, timeouts, or 5xx (backend unreachable / cold-start):
+        // the session may still exist in the DB — preserve the local cache to avoid
+        // a false logout while the container is waking up.
+        console.warn("Auth verification encountered transient network or server error:", e);
         if (cachedUser) {
             console.info("Preserving active session using cached state during transient network disruption.");
             return cachedUser;
