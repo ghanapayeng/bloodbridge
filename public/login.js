@@ -122,6 +122,7 @@ if (loginForm) {
 
             try {
                 sessionStorage.setItem("bloodbridge_user", JSON.stringify(body));
+                localStorage.setItem("bloodbridge_user", JSON.stringify(body));
             } catch (_) {}
 
             showToast("Signed in successfully!", "success");
@@ -255,6 +256,7 @@ function setupOtpLogin() {
 
                 try {
                     sessionStorage.setItem("bloodbridge_user", JSON.stringify(body));
+                    localStorage.setItem("bloodbridge_user", JSON.stringify(body));
                 } catch (_) {}
 
                 showToast("Signed in successfully!", "success");

@@ -7,14 +7,13 @@ const donorsContainer = document.getElementById("donorsContainer");
 const matchStatusCount = document.getElementById("matchStatusCount");
 
 document.addEventListener("DOMContentLoaded", async function () {
-    // Check if user is logged in (redirect to login if unauthenticated, preserving query params)
-    const user = await getCurrentUser(true);
-    if (!user) return;
+    // Check if user is logged in (optional - guests and donors can both search)
+    const user = await getCurrentUser(false);
 
     // Read query parameters
     const urlParams = new URLSearchParams(window.location.search);
     const bgParam = urlParams.get("bloodGroup");
-    const cityParam = urlParams.get("city");
+    const cityParam = urlParams.get("city") || (user && user.city ? user.city : "");
     const urgencyParam = urlParams.get("urgency");
 
     if (bgParam && document.getElementById("bloodGroup")) {

@@ -45,8 +45,10 @@ let _isRedirectingToLogin = false;
 function safeRedirectToLogin() {
     if (_isRedirectingToLogin) return;
     _isRedirectingToLogin = true;
+    const hadPreviousSession = !!(sessionStorage.getItem("bloodbridge_user") || localStorage.getItem("bloodbridge_user"));
     try {
         sessionStorage.removeItem("bloodbridge_user");
+        localStorage.removeItem("bloodbridge_user");
     } catch (_) {}
     const path = window.location.pathname.toLowerCase();
     if (!path.endsWith("login.html") && !path.endsWith("index.html") && !path.endsWith("/")) {
@@ -55,7 +57,9 @@ function safeRedirectToLogin() {
             const currentUrl = page + window.location.search;
             if (currentUrl && !currentUrl.startsWith("login") && !currentUrl.startsWith("signup")) {
                 sessionStorage.setItem("bloodbridge_redirect", currentUrl);
-                sessionStorage.setItem("bloodbridge_session_expired", "1");
+                if (hadPreviousSession) {
+                    sessionStorage.setItem("bloodbridge_session_expired", "1");
+                }
             }
         } catch (_) {}
         window.location.replace("login.html");
@@ -147,19 +151,21 @@ async function apiFetch(url, options = {}) {
         }
     }
 
-    // Handle 401 Unauthorized: Only redirect on genuine session check (e.g. /api/auth/me)
+    // Handle 401 Unauthorized
     if (response.status === 401) {
         const isAuthProbe = url.includes("/api/auth/me");
-        if (isAuthProbe && options.redirectOnUnauthorized !== false) {
-            try {
-                sessionStorage.removeItem("bloodbridge_user");
-            } catch (_) {}
-            safeRedirectToLogin();
-            return null;
+        if (isAuthProbe) {
+            if (options.redirectOnUnauthorized !== false) {
+                safeRedirectToLogin();
+            }
+            const error = new Error("Unauthenticated");
+            error.status = 401;
+            error.data = data;
+            throw error;
         }
 
         const errorMsg = (data && (data.message || data.error)) || "Session unauthorized or expired.";
-        if (typeof showToast === "function") {
+        if (options.showToast !== false && options.redirectOnUnauthorized !== false && typeof showToast === "function") {
             showToast(errorMsg, "error");
         }
         const error = new Error(errorMsg);
@@ -212,17 +218,18 @@ async function apiFetch(url, options = {}) {
 async function getCurrentUser(redirectIfUnauth = false) {
     let cachedUser = null;
     try {
-        const stored = sessionStorage.getItem("bloodbridge_user");
+        const stored = sessionStorage.getItem("bloodbridge_user") || localStorage.getItem("bloodbridge_user");
         if (stored) {
             cachedUser = JSON.parse(stored);
         }
     } catch (_) {}
 
     try {
-        const user = await apiFetch("/api/auth/me", { redirectOnUnauthorized: false });
+        const user = await apiFetch("/api/auth/me", { redirectOnUnauthorized: false, showToast: false });
         if (user && user.email) {
             try {
                 sessionStorage.setItem("bloodbridge_user", JSON.stringify(user));
+                localStorage.setItem("bloodbridge_user", JSON.stringify(user));
             } catch (_) {}
             return user;
         }
@@ -230,6 +237,7 @@ async function getCurrentUser(redirectIfUnauth = false) {
         // If returned null or empty without error
         try {
             sessionStorage.removeItem("bloodbridge_user");
+            localStorage.removeItem("bloodbridge_user");
         } catch (_) {}
         if (redirectIfUnauth) {
             safeRedirectToLogin();
@@ -240,6 +248,7 @@ async function getCurrentUser(redirectIfUnauth = false) {
         if (e && e.status === 401) {
             try {
                 sessionStorage.removeItem("bloodbridge_user");
+                localStorage.removeItem("bloodbridge_user");
             } catch (_) {}
             if (redirectIfUnauth) {
                 safeRedirectToLogin();
@@ -259,12 +268,13 @@ async function getCurrentUser(redirectIfUnauth = false) {
 
 async function logout() {
     try {
-        await apiFetch("/api/auth/logout", { method: "POST", redirectOnUnauthorized: false });
+        await apiFetch("/api/auth/logout", { method: "POST", redirectOnUnauthorized: false, showToast: false });
     } catch (e) {
         console.warn("Logout error:", e);
     } finally {
         try {
             sessionStorage.removeItem("bloodbridge_user");
+            localStorage.removeItem("bloodbridge_user");
         } catch (_) {}
         localStorage.removeItem("bloodBridgeDonor");
         window.location.href = "index.html";

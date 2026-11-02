@@ -94,7 +94,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/", "/*.html", "/**.css", "/**.js", "/favicon.ico", "/error").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/health", "/api/auth/csrf", "/api/donors/verify/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/health", "/api/auth/csrf", "/api/donors", "/api/donors/**", "/api/blood-requests", "/api/blood-requests/**", "/api/requests", "/api/requests/**", "/api/inventory/summary").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login", "/api/auth/login/**", "/api/auth/otp/**").permitAll()
                         .anyRequest().authenticated())
                 .build();

@@ -71,9 +71,12 @@ module.exports = async (req, res) => {
   }
 
   // 1. Enable standard CORS for all environments
-  const origin = req.headers.origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  if (req.headers.origin) {
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-XSRF-TOKEN, X-Requested-With, Accept, Cookie');
   res.setHeader('Access-Control-Expose-Headers', 'Set-Cookie, X-XSRF-TOKEN');
@@ -165,10 +168,16 @@ module.exports = async (req, res) => {
 
     if (cookies.length > 0) {
       const rewrittenCookies = cookies.map(cookieStr => {
-        return cookieStr
+        let cookie = cookieStr
           .replace(/Domain=[^;]+;?\s*/gi, '')
-          .replace(/SameSite=[^;]+;?\s*/gi, '')
-          + '; SameSite=Lax';
+          .replace(/SameSite=[^;]+;?\s*/gi, '');
+        if (!/;\s*Path=/i.test(cookie)) {
+          cookie += '; Path=/';
+        }
+        if (!/;\s*Max-Age=/i.test(cookie) && !/;\s*Expires=/i.test(cookie)) {
+          cookie += '; Max-Age=604800';
+        }
+        return cookie + '; SameSite=Lax';
       });
       res.setHeader('Set-Cookie', rewrittenCookies);
     }

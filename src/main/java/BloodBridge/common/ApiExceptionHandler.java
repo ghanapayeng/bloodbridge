@@ -55,6 +55,12 @@ public class ApiExceptionHandler {
                 Instant.now(), HttpStatus.BAD_REQUEST.value(), "Bad Request", exception.getMessage(), Map.of()));
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    ResponseEntity<ApiError> handleNotFound(org.springframework.web.servlet.resource.NoResourceFoundException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ApiError(
+                Instant.now(), HttpStatus.NOT_FOUND.value(), "Not Found", exception.getMessage(), Map.of()));
+    }
+
     @ExceptionHandler(Exception.class)
     ResponseEntity<ApiError> handleGenericException(Exception exception) {
         log.error("[INTERNAL ERROR] Unexpected error processing request", exception);
