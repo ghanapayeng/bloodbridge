@@ -1,36 +1,19 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
+  "buildCommand": "node build.js",
+  "outputDirectory": "public",
   "cleanUrls": true,
   "trailingSlash": false,
-  "services": {
-    "web": {
-      "root": "./",
-      "framework": "vite",
-      "buildCommand": "node build.js",
-      "outputDirectory": "public",
-      "cleanUrls": true
-    },
-    "backend": {
-      "root": "./",
-      "framework": "container",
-      "runtime": "container",
-      "entrypoint": "Dockerfile.vercel"
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   },
   "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": {
-        "service": "backend"
-      }
-    },
-    {
-      "source": "/(.*)",
-      "destination": {
-        "service": "web"
-      }
-    }
+    { "source": "/api/health", "destination": "/api/health" },
+    { "source": "/api/:path*", "destination": "/api/[...path]" }
   ],
   "headers": [
     {
