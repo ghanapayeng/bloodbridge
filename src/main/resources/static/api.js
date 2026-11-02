@@ -234,7 +234,12 @@ async function getCurrentUser(redirectIfUnauth = false) {
             return user;
         }
 
-        // If returned null or empty without error
+        // /api/auth/me returned 200 but with null/empty body — treat as unauthenticated.
+        // If we have a cached user from a recent login, preserve it rather than forcing a logout.
+        if (cachedUser) {
+            console.info("Auth endpoint returned empty body; preserving locally cached session.");
+            return cachedUser;
+        }
         try {
             sessionStorage.removeItem("bloodbridge_user");
             localStorage.removeItem("bloodbridge_user");
@@ -244,8 +249,18 @@ async function getCurrentUser(redirectIfUnauth = false) {
         }
         return null;
     } catch (e) {
-        // ONLY redirect on explicit 401 Unauthorized status!
+        // On 401: session cookie is gone on the backend.
+        // If we have a cached user from a previous login, return it — the session may still be
+        // valid (e.g. Vercel container cold-start, SameSite cross-origin gap, brief DB hiccup).
+        // Only wipe the session and redirect when there is NO locally-known user at all.
         if (e && e.status === 401) {
+            if (cachedUser) {
+                // Session cookie lost, but user was recently authenticated — preserve local state.
+                // The next successful request will re-establish the cookie if the user is real.
+                console.warn("Backend returned 401 but local session cache exists — preserving session.");
+                return cachedUser;
+            }
+            // Truly unauthenticated: no local cache and backend says 401.
             try {
                 sessionStorage.removeItem("bloodbridge_user");
                 localStorage.removeItem("bloodbridge_user");
@@ -256,7 +271,7 @@ async function getCurrentUser(redirectIfUnauth = false) {
             return null;
         }
 
-        // Never redirect on network errors, timeouts, CORS issues, or 5xx server cold starts
+        // Never redirect on network errors, timeouts, CORS issues, or 5xx server cold starts.
         console.warn("Auth verification encountered transient network or server state:", e);
         if (cachedUser) {
             console.info("Preserving active session using cached state during transient network disruption.");
